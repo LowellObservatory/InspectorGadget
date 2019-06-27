@@ -1,4 +1,4 @@
 # InspectorGadget
 Various small projects that monitor various gadgets, using sensors, and send a signal if there are problems.
 
-![logo](/inspectorgadget/static/images/inspector_gadget.jpeg "Logo")
+![logo]/InspectorGadget/blob/master/images/inspector-gadget.jpeg
