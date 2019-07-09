@@ -8,9 +8,9 @@ from fractions import Fraction
 # and ISO to 800 (for maximum gain)
 camera = PiCamera(
     resolution=(1280, 720),
-    framerate=Fraction(1, 10),
+    framerate=Fraction(1, 6),
     sensor_mode=3)
-camera.shutter_speed = 10000000
+camera.shutter_speed = 6000000
 camera.iso = 800
 camera.rotate = 90
 # Give the camera a good long time to set gains and
