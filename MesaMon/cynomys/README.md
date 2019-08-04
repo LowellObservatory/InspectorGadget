@@ -1,5 +1,7 @@
 # Cynomys
 
+"sin-o-mis" or "sy-no-mis" (seems like there's a slight preference out there for the latter)
+
 Sensor platform that will ride along on the back of a telescope to monitor
 stuff.  
 
