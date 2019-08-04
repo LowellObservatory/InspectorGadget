@@ -28,11 +28,25 @@ Install the Silicon Labs driver for your platform, only needed for Windows and
 OS X.  You can find that at 
 [CP210x drivers](https://www.silabs.com/products/development-tools/software/usb-to-uart-bridge-vcp-drivers).
 
-I'll add that in the past, using knock-off/dirt-cheap ESP development 
+In the past, using knock-off/dirt-cheap ESP development 
 boards, I've had a crappy time with this variant of UART-to-USB chip.  I
 haven't had any trouble with the above board, though, which makes me think
 that the other boards had a ... less-than-honest CP210x chip.  Since this
 one is the actual espressif branded board, it's a legit SI labs chip.
+
+The driver itself can be annoying to install in OS X, because Apple.
+I've run into cases where it silently fails because it doesn't trigger
+Apple's security prompt, which is annoying.  So:
+
+- CLOSE ALL BROWSER WINDOWS 
+- Open the OS X "Security & Privacy" window
+- Start the driver installation process
+- Watch for an 'authorize' button to show up to allow it to proceed, 
+and authorize it when it does
+
+I've run into stupidness with OS X and Chrome, where the 'authorize' button
+would do literally *nothing* when pressed if Chrome was open.  So, close all
+browsers before hand and it should be ok.
 
 Once the driver is installed, plug the board into a computer and look for 
 the new entry in your devices/com port listing.  On linux/OS X, it usually
