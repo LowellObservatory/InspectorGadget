@@ -6,6 +6,7 @@
 * ARC controller power supply temperature
 * status of dome shutter
 
+![MesaMonDesign](./images/MesaMonDesign.png)
 
 
 ### Cynomys
