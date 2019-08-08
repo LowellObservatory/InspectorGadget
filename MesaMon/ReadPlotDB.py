@@ -68,8 +68,8 @@ class ReadPlotDB(object):
         plt.xticks(rotation=70)
 
         # Plot the data, add a legend.
-        plt.plot(self.time, self.temp1, label='compressor')
-        plt.plot(self.time, self.temp2, label='ambient')
+        plt.plot(dates, self.temp1, label='compressor')
+        plt.plot(dates, self.temp2, label='ambient')
         plt.legend()
 
         # Save plot to an image.
