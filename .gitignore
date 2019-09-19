@@ -110,3 +110,4 @@ MesaMon/cynomys/dbconfig.json
 # References & binaries
 *.zip
 *.bin
+MesaMon/cynomys/webrepl_cfg.py
