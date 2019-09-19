@@ -1,4 +1,3 @@
-# This file is executed on every boot (including wake-boot from deepsleep)
 import gc
 import esp
 esp.osdebug(0)
@@ -13,10 +12,15 @@ from machine import Pin
 import utils
 import utils_wifi as uwifi
 
+import onewire_looper
+
 
 # Init the stuff
 # WiFi Status, cmd status, onboard
-ledBuiltin = utils.shinyThing(pin=18, inverted=False)
+# ledBuiltin = utils.shinyThing(pin=18, inverted=False)
+ledIndicator = utils.shinyThing(pin=4, inverted=False)
+
+ledIndicator.on()
 
 # This gives time for any automatic wifi connection to finish
 time.sleep(5)
@@ -34,10 +38,10 @@ knownaps = json.loads(klines)
 wlan, conncheck, wconfig = uwifi.checkWifiStatus(knownaps, repl=True)
 
 if conncheck is True:
-    ledBuiltin.off()
+    ledIndicator.off()
 else:
-    utils.blinken(ledBuiltin, 0.25, 10)
-    ledBuiltin.on()
+    utils.blinken(ledIndicator, 0.25, 10)
+    ledIndicator.on()
 
 # In case you want the MAC address, here it is in two parts
 # macaddr = ubinascii.hexlify(wlan.config('mac'),':').decode()
@@ -49,7 +53,19 @@ else:
 time.sleep(2)
 
 # Tidy up before the infinite loop
-ledBuiltin.off()
+ledIndicator.off()
 gc.collect()
 
-# Start the main loop
+# Start the main loop. First need to define a few things...
+dsPin = machine.Pin(21)
+with open('./dbconfig.json') as f:
+    dlines = f.read()
+# Tidy up for parsing now
+dlines = dlines.replace('\n', '')
+dbconfig = json.loads(dlines)
+
+onewire_looper.runmain(dsPin,
+                       dbconfig['dbhost'],
+                       dbconfig['dbport'],
+                       dbconfig['dbname'],
+                       led=ledIndicator)
