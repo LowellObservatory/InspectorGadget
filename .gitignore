@@ -102,3 +102,11 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# Configurations
+MesaMon/cynomys/knownaps.json
+MesaMon/cynomys/dbconfig.json
+
+# References & binaries
+*.zip
+*.bin
