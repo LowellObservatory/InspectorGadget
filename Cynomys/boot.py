@@ -6,21 +6,21 @@ esp.osdebug(0)
 #   they're always available in an interactive session
 import time
 import machine
+import ubinascii
 import ujson as json
 from machine import Pin
 
 import utils
 import utils_wifi as uwifi
 
-import onewire_looper
+# On a WeMos D1 Mini (clone) the builtin LED is on pin 2
+# ledIndicator = utils.shinyThing(pin=2, inverted=False)
 
+# On the ESP32 DevKit, the LED indicator is tied to +5V and not a pin
+ledIndicator = None
 
-# Init the stuff
-# WiFi Status, cmd status, onboard
-# ledBuiltin = utils.shinyThing(pin=18, inverted=False)
-ledIndicator = utils.shinyThing(pin=4, inverted=False)
-
-ledIndicator.on()
+if ledIndicator is not None:
+    ledIndicator.on()
 
 # This gives time for any automatic wifi connection to finish
 time.sleep(5)
@@ -37,35 +37,41 @@ knownaps = json.loads(klines)
 #   If repl is True, start the webrepl too
 wlan, conncheck, wconfig = uwifi.checkWifiStatus(knownaps, repl=True)
 
-if conncheck is True:
-    ledIndicator.off()
-else:
-    utils.blinken(ledIndicator, 0.25, 10)
-    ledIndicator.on()
+if ledIndicator is not None:
+    if conncheck is True:
+        ledIndicator.off()
+    else:
+        utils.blinken(ledIndicator, 0.25, 10)
+        ledIndicator.on()
 
-# In case you want the MAC address, here it is in two parts
-# macaddr = ubinascii.hexlify(wlan.config('mac'),':').decode()
-# mac1 = macaddr[0:8]
-# mac2 = macaddr[8:]
+# In case you want the MAC address, here it is
+macaddr = ubinascii.hexlify(wlan.config('mac'),':').decode()
+print("Device MAC:", macaddr)
 
 # Ok, give even a little more time for things to settle before
 #   we move on to main.py
 time.sleep(2)
 
 # Tidy up before the infinite loop
-ledIndicator.off()
+if ledIndicator is not None:
+    ledIndicator.off()
 gc.collect()
 
-# Start the main loop. First need to define a few things...
-dsPin = machine.Pin(21)
+# Almost ready for main loop.  Read in the database information first
 with open('./dbconfig.json') as f:
     dlines = f.read()
 # Tidy up for parsing now
 dlines = dlines.replace('\n', '')
 dbconfig = json.loads(dlines)
 
-onewire_looper.runmain(dsPin,
-                       dbconfig['dbhost'],
-                       dbconfig['dbport'],
-                       dbconfig['dbname'],
-                       led=ledIndicator)
+# At this point, you're ready to go.  Define your specific sensor needs,
+#   then import your main loop and call it, a la:
+#
+# dsPin = machine.Pin(21)
+#
+# import onewire_looper
+# onewire_looper.runmain(dsPin,
+#                        dbconfig['dbhost'],
+#                        dbconfig['dbport'],
+#                        dbconfig['dbname'],
+#                        led=ledIndicator)
