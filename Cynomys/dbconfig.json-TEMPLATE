@@ -1,0 +1,4 @@
+{"dbhost": "YourHostOrIPHere",
+ "dbport": 8086,
+ "dbname": "YourDBNameHere"
+}
