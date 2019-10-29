@@ -82,6 +82,7 @@ celerybeat-schedule
 *.sage.py
 
 # Environments
+*.swp
 .env
 .venv
 env/
@@ -104,8 +105,9 @@ venv.bak/
 .mypy_cache/
 
 # Configurations
-MesaMon/cynomys/knownaps.json
-MesaMon/cynomys/dbconfig.json
+*.json
+knownaps.json
+dbconfig.json
 
 # References & binaries
 *.zip
