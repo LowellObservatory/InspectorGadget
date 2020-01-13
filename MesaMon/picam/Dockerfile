@@ -11,7 +11,7 @@ ARG gpioid="31415"
 
 RUN addgroup --gid ${groupid} lig && \
     adduser lig --uid ${userid} --gid ${groupid} \
-    --gecos '' --disabled-password 
+    --gecos '' --disabled-password
 
 #RUN addgroup --gid ${vidid} video && \
 #RUN addgroup --gid ${i2cid} i2c && \
@@ -21,9 +21,9 @@ RUN addgroup --gid ${spiid} spi && \
 RUN usermod -a -G video lig && \
     usermod -a -G i2c lig && \
     usermod -a -G spi lig && \
-    usermod -a -G gpio lig 
+    usermod -a -G gpio lig
 
-# This updates to the raspberry pi python repo to make sure that we 
+# This updates to the raspberry pi python repo to make sure that we
 #   download binaries whenever possible vs. building from source
 COPY pip.conf /etc/pip.conf
 
@@ -37,11 +37,10 @@ RUN mkdir /home/lig/www/ && mkdir /home/lig/snaps/ && mkdir /home/lig/snaps/anim
 
 WORKDIR /home/lig/
 
-COPY --chown=lig:lig utils.py . 
+COPY --chown=lig:lig utils.py .
 COPY --chown=lig:lig utils_logs.py .
 
 COPY --chown=lig:lig snapper.py .
 COPY --chown=lig:lig streamer.py .
 
 CMD ["python", "snapper.py"]
-#CMD ["python", "streamer.py"]
