@@ -8,7 +8,7 @@ DC_EXIMCONFIG_CONFIGTYPE="internet"
 # By default, only hosts on the private network can use the smart host (ie,
 # only other containers, not the whole internet); a thin layer of protection
 # in case port 25 is accidentally exposed to the public internet.
-DC_RELAY_NETS="10.0.0.0/8;172.16.0.0/12;192.168.0.0/16"
+DC_RELAY_NETS="10.0.0.0/8;172.0.0.0/8;192.168.0.0/16"
 
 # If RELAY_HOST has been set then switch to smart host configuration.
 if [ "x$RELAY_HOST" != "x" ]; then
