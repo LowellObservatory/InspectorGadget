@@ -106,8 +106,8 @@ venv.bak/
 
 # Configurations
 *.json
-knownaps.json
-dbconfig.json
+*.conf
+
 
 # References & binaries
 *.zip
