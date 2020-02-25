@@ -21,16 +21,13 @@ from __future__ import division, print_function, absolute_import
 
 from ligmos import utils
 
-from . import temperamental
-
-
-def run():
-    """
-    """
-    pass
+from mesamon import confParser
 
 
 if __name__ == "__main__":
+    confFile = './config/uatu.conf'
+    conf = confParser(confFile)
+
     print("Setting up listener...")
     # This is a default listener, that will just literally print (to STDOUT)
     #   all messages on all subscribed topics
@@ -75,9 +72,6 @@ if __name__ == "__main__":
 
     # Disconnect from the ActiveMQ broker
     conn.disconnect()
-
-
-
 
     dbhost = 'localhost'
     dbport = 8086
