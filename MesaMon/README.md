@@ -11,7 +11,7 @@ A Raspberry Pi based monitoring system for components out at Anderson Mesa.
 - Software
     - influxdb (docker)
     - nginx (docker)
-    - Always-on image capture (__picam__ in docker)
+    - [PiCamAnimator](https://github.com/LowellObservatory/PiCamAnimator)
     - __Uatu__ manages monitoring
         - Temperature logging
         - Emailing morning summaries
@@ -19,10 +19,11 @@ A Raspberry Pi based monitoring system for components out at Anderson Mesa.
 
 ## Layout
 
-- __picam__ captures images in a loop, autoscaling the exposure
-- __temperamental__ captures temperatures from the attached sensors
-  and publishes them in the database on the pi
-
+This isn't set up as a proper python package, since it's mutated rather
+than planned out.  A lot of cross-pollination has occured from things like
+[Ultimonitor](https://github.com/LowellObservatory/Ultimonitor) so it's
+more of a collection of independent modules that will eventually be
+consolidated under the umbrella of the main watcher, Uatu.
 
 ### docker-compose
 
