@@ -19,7 +19,7 @@ observe Earth and its solar system.
 
 from __future__ import division, print_function, absolute_import
 
-from ligmos.utils import databse
+from ligmos import utils
 
 from . import temperamental
 
@@ -31,6 +31,54 @@ def run():
 
 
 if __name__ == "__main__":
+    print("Setting up listener...")
+    # This is a default listener, that will just literally print (to STDOUT)
+    #   all messages on all subscribed topics
+    listener = utils.amq.ParrotSubscriber(dictify=False)
+
+    # Use the ligmos ActiveMQ helper function
+    conn = utils.amq.amqHelper(default_host,
+                               topics,
+                               user=None,
+                               passw=None,
+                               port=61613,
+                               connect=False,
+                               listener=listener)
+
+    # This helper class catches various signals; see
+    #   ligmos.utils.common.HowtoStopNicely() for details
+    runner = utils.common.HowtoStopNicely()
+
+    # All LIG codes are run in docker containers so infinite loops are the norm
+    while runner.halt is False:
+        # All of these are possibilities of heartbeat failure or success
+        #   NOTE: conn.connect() handles ConnectionError exceptions
+        if conn.conn is None:
+            print("No connection!  Attempting to connect ...")
+            conn.connect(listener=listener)
+        elif conn.conn.transport.connected is False:
+            print("Connection died! Reestablishing ...")
+            conn.connect(listener=listener)
+        else:
+            # You can do other stuff in here, if needed, since this means
+            #   that the connection to the broker is A-OK.
+            print("Connection still valid")
+
+        # Consider taking a big nap
+        if runner.halt is False:
+            print("Starting a big sleep")
+            # Sleep for bigsleep, but in small chunks to check abort
+            for _ in range(bigsleep):
+                time.sleep(0.5)
+                if runner.halt is True:
+                    break
+
+    # Disconnect from the ActiveMQ broker
+    conn.disconnect()
+
+
+
+
     dbhost = 'localhost'
     dbport = 8086
     dbname = 'mesa42'
