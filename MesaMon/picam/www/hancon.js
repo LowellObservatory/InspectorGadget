@@ -6,7 +6,7 @@ var han3d = {
     // in minutes
     auto_refresh: "1",
 
-    image_base: "http://tweedledee/snapshots/anim/",
+    image_base: "http://localhost/snapshots/anim/",
     basename: "pizini_???.png",
     num_frames: "24",
 //    base_starting_number: "0",
