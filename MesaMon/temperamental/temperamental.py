@@ -15,7 +15,8 @@ def readAllSensors():
         print("Sensor %s (%s) has temperature %.2f" % (sid, sty, stp))
         fields.update({sid: stp})
 
-    pkt = packetizer.makeInfluxPacket(meas=['temperatures'], fields=fields)
+    pkt = packetizer.makeInfluxPacket(meas=['temperatures'],
+                                      fields=fields)
     print(pkt)
 
     return pkt
@@ -26,7 +27,7 @@ if __name__ == "__main__":
     dbport = 8086
     dbname = 'mesa42'
 
-    idb = database.influxobj(tablename=dbname, 
+    idb = database.influxobj(tablename=dbname,
                              host=dbhost, port=dbport,
                              connect=True)
 

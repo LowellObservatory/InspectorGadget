@@ -4,22 +4,17 @@
 #   that will set all of our default/desired variables for runtime.
 #   Only works on Linux hosts.
 #
-#   Created by RTH 
+#   Created by RTH
 #     2018/08/22
-
-# Desired component versions, hardcoded for production & stability
-#export TELEGRAF_VERSION="1.11.0"
-#export CHRONOGRAF_VERSION="1.7.12"
-export INFLUXDB_VERSION="1.7.6"
 
 # NO COMMAS!!!
 #   This list is used to check/make the data storage directories
 #services=("chronograf" "influxdb" "telegraf" "lig")
-services=("influxdb" "snapper")
+services=("snapper")
 
 # If you're on OS X, `getent` isn't there because Apple didn't invent it,
 #   so they instead invented a horribly more complex replacement.
-#   I'm sure others have screwed around with `dscl` or whatever to 
+#   I'm sure others have screwed around with `dscl` or whatever to
 #   get the equivalent information but I'm not going to.
 DCUSERID=`getent passwd $USER | cut -d: -f3`
 DCGRPID=`getent passwd $USER | cut -d: -f4`
@@ -48,10 +43,6 @@ echo "VIDID=$VIDID" >> .env
 echo "I2CID=$I2CID" >> .env
 echo "SPIID=$SPIID" >> .env
 echo "GPIOID=$GPIOID" >> .env
-#echo "# Component versions to use" >> .env
-#echo "TELEGRAF_VERSION=$TELEGRAF_VERSION" >> .env
-echo "INFLUXDB_VERSION=$INFLUXDB_VERSION" >> .env
-#echo "CHRONOGRAF_VERSION=$CHRONOGRAF_VERSION" >> .env
 
 echo "./.env contents:"
 echo "==========="
@@ -81,7 +72,7 @@ echo ""
 
 for i in "${services[@]}"
 do
-    # Check to see if the directories exist in the 
+    # Check to see if the directories exist in the
     #   already specified $DCDATADIR
     dadir="$DOCKDATADIR/$i"
     if [ -d "$dadir" ]; then
@@ -92,7 +83,7 @@ do
     fi
 
     # Now do the same for the log directories
-    # Check to see if the directories exist in the 
+    # Check to see if the directories exist in the
     #   already specified $DCDATADIR
 
     ldir="$DOCKDATADIR/logs/$i"
@@ -106,12 +97,15 @@ do
 
 done
 
-backdir="$DOCKDEVDIR/influxbackupdump"
-if [ -d "$backdir" ]; then
-    echo "$backdir is good!"
+# This is the required animation subdirectory for snapper
+#   It's bind mounted into the container, so if the anim/ subdir
+#   doesn't exist then it'll fail in the container too
+animdir="$DOCKDEVDIR/snapper/anim"
+if [ -d "$animdir" ]; then
+    echo "$animdir is good!"
 else
-    echo "$backdir is nogood!"
-    mkdir "$backdir"
+    echo "$animdir is nogood!"
+    mkdir "$animdir"
     echo "...so I made it good."
 fi
 

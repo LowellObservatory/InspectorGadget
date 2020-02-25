@@ -1,16 +1,5 @@
 version: '3'
 services:
-  dirtymail:
-    build:
-      context: './dirtymail/'
-      dockerfile: 'exim4Dockerfile'
-    container_name: 'dirtymail'
-    ports:
-      - 25:25
-    restart: always
-    networks:
-      - default
-
   picam:
     build:
       context: './picam/'
@@ -36,8 +25,6 @@ services:
       - /opt/vc/lib:/opt/vc/lib
       - ${DCDATADIR}/snapper:/home/lig/snaps
       - ${DCDATADIR}/logs/snapper/:/home/lig/logs/
-    depends_on:
-        - dirtymail
     restart: always
     networks:
       - default
@@ -54,29 +41,10 @@ services:
       - ${DCDEVDIR}/config/nginx.conf:/etc/nginx/nginx.conf
       - ${DCDEVDIR}/config/nginx-app.conf:/etc/nginx/conf.d/default.conf
     depends_on:
-      - dirtymail
       - picam
     restart: always
     networks:
       - default
-
-  influxdb:
-    image: 'influxdb:${INFLUXDB_VERSION}'
-    container_name: 'influxdb'
-    ports:
-      - 8086:8086
-      - 8088:8088
-    volumes:
-      - ${DCDATADIR}/influxdb:/var/lib/influxdb
-      - ${DCDATADIR}/logs/influxdb:/var/log/influxdb
-      - ${DCDEVDIR}/config/influxdb.conf:/etc/influxdb/influxdb.conf:ro
-      - ${DCDEVDIR}/influxbackupdump/:/home/influxbackups/
-    networks:
-      - default
-    user: ${DCUSERID}:${DCGRPID}
-    environment:
-      - HOME=/tmp/
-    restart: always
 
 networks:
   default:
