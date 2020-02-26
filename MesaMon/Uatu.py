@@ -26,7 +26,7 @@ from mesamon import confParser
 
 if __name__ == "__main__":
     confFile = './config/uatu.conf'
-    conf = confParser(confFile)
+    conf = confParser.parseConf(confFile)
 
     print("Setting up listener...")
     # This is a default listener, that will just literally print (to STDOUT)
