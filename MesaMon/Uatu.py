@@ -24,7 +24,9 @@ from ligmos import utils
 from mesamon import confParser
 
 
-if __name__ == "__main__":
+def main():
+    """
+    """
     confFile = './config/uatu.conf'
     conf = confParser.parseConf(confFile)
 
@@ -87,3 +89,7 @@ if __name__ == "__main__":
 
         print("Sleeping ...")
         time.sleep(10)
+
+
+if __name__ == "__main__":
+    main()
