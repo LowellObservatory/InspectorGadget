@@ -11,7 +11,7 @@ A Raspberry Pi based monitoring system for components out at Anderson Mesa.
 - Software
     - influxdb (docker)
     - nginx (docker)
-    - [PiCamAnimator](https://github.com/LowellObservatory/PiCamAnimator)
+    - [PiCamHelpers](https://github.com/LowellObservatory/PiCamHelpers)
     - __Uatu__ manages monitoring
         - Temperature logging
         - Emailing morning summaries
