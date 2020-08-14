@@ -65,13 +65,22 @@ dlines = dlines.replace('\n', '')
 dbconfig = json.loads(dlines)
 
 # At this point, you're ready to go.  Define your specific sensor needs,
-#   then import your main loop and call it, a la:
-#
-# dsPin = machine.Pin(21)
-#
-# import onewire_looper
-# onewire_looper.runmain(dsPin,
-#                        dbconfig['dbhost'],
-#                        dbconfig['dbport'],
-#                        dbconfig['dbname'],
-#                        led=ledIndicator)
+#   then import your main loop and call it.
+
+# bmeaddr = 0x77
+# bmePwr = machine.Pin(27, machine.Pin.OUT)
+# bmePwr.on()
+# i2c = machine.I2C(scl=machine.Pin(22), sda=machine.Pin(21), freq=100000)
+
+# import bme_looper
+# # Desperation has set in.
+# try:
+#     bme_looper.main(i2c, bmeaddr, bmePwr, dbconfig, wlconfig, loops=25)
+# except:
+#     print("Major fail :(")
+
+# # Drop the hammer and just reset this goddamn thing
+# print("Resetting in 5 seconds ...")
+# time.sleep(5)
+
+# machine.reset()
