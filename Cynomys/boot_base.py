@@ -45,7 +45,7 @@ if ledIndicator is not None:
         ledIndicator.on()
 
 # In case you want the MAC address, here it is
-macaddr = ubinascii.hexlify(wlan.config('mac'),':').decode()
+macaddr = ubinascii.hexlify(wlan.config('mac'), ':').decode()
 print("Device MAC:", macaddr)
 
 # Ok, give even a little more time for things to settle before

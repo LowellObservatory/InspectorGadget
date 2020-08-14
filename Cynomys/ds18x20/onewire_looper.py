@@ -20,8 +20,8 @@ def postToInfluxDB(host, port, dbname,
 
     Also letting the database time tag it for us.
     """
-    if dbuser != None and dbpass != None:
-        url = "http://%s:%s/write?u=%s&p=%s&db=%s" % (host, port, 
+    if dbuser is not None and dbpass is not None:
+        url = "http://%s:%s/write?u=%s&p=%s&db=%s" % (host, port,
                                                       dbuser, dbpass, dbname)
     else:
         url = "http://%s:%s/write?db=%s" % (host, port, dbname)
@@ -46,7 +46,7 @@ def postToInfluxDB(host, port, dbname,
 
     # There are few rails here so this could go ... poorly.
     try:
-        print("Posting to %s:%s %s.%s" % (host, port, 
+        print("Posting to %s:%s %s.%s" % (host, port,
                                           dbname, metric))
         # print("%s=%s, %s=%s" % (tagN, tagV, keyname, value))
         print(line)
@@ -142,7 +142,7 @@ def main(dsPin, dbconfig, wlconfig, loops=10, led=None):
 
     loopCounter = 0
     while loopCounter < loops:
-        print("")   
+        print("")
         print("Starting loop %d of %d" % (loopCounter+1, loops))
         print("Checking WiFi status ...")
         # Attempt to connect to one of the strongest of knownaps
@@ -158,19 +158,19 @@ def main(dsPin, dbconfig, wlconfig, loops=10, led=None):
             curAP = wlan.config('essid')
             curRSSI = wlan.status('rssi')
             print("Connected to %s at %s thru %s at %.0f dBm" % (curAP, curIP,
-                                                                 curGW, 
+                                                                 curGW,
                                                                  curRSSI))
-            
+
             # Note: I'm skipping the subnet because I don't care
             print()
 
             postToInfluxDB(dbhost, dbport, dbname, "DyerDome", curIP,
-                           keyname="ipaddress", 
+                           keyname="ipaddress",
                            tagN="config", tagV="network",
                            dbuser=dbuser, dbpass=dbpass)
             time.sleep(0.25)
             print()
-            
+
             postToInfluxDB(dbhost, dbport, dbname, "DyerDome", curGW,
                            keyname="gateway",
                            tagN="config", tagV="network",
@@ -199,7 +199,7 @@ def main(dsPin, dbconfig, wlconfig, loops=10, led=None):
             print()
 
             # Given the fact that this is a wifi sensor, we only should
-            #   attempt a measurement if the wifi is good.  So keep this 
+            #   attempt a measurement if the wifi is good.  So keep this
             #   all in the .isconnected() block!
 
             if led is not None:
@@ -231,9 +231,9 @@ def main(dsPin, dbconfig, wlconfig, loops=10, led=None):
         print("Sleeping ...")
         for sc in range(0, 60):
             if sc % 10 == 0 and sc != 0:
-                 print("\n")
+                print("\n")
             else:
                 print(".", end='')
             time.sleep(1)
-        
+
         loopCounter += 1

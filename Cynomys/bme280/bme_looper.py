@@ -34,7 +34,7 @@ def postToInfluxDB(influxhost, influxport, dbname,
 
     # There are few rails here so this could go ... poorly.
     try:
-        print("Posting to %s:%s %s.%s" % (influxhost, influxport, 
+        print("Posting to %s:%s %s.%s" % (influxhost, influxport,
                                           dbname, metric))
         # print("%s=%s, %s=%s" % (tagN, tagV, keyname, value))
         print(line)
@@ -125,18 +125,18 @@ def main(i2c, bmeaddr, bmePwr, dbconfig, wlstuff, loops=10):
             curAP = wlan.config('essid')
             curRSSI = wlan.status('rssi')
             print("Connected to %s at %s thru %s at %.0f dBm" % (curAP, curIP,
-                                                                 curGW, 
+                                                                 curGW,
                                                                  curRSSI))
-            
+
             # Note: I'm skipping the subnet because I don't care
             print()
 
             postToInfluxDB(dbhost, dbport, dbname, "DCTMezz", curIP,
-                           keyname="ipaddress", 
+                           keyname="ipaddress",
                            tagN="config", tagV="network")
             time.sleep(0.25)
             print()
-            
+
             postToInfluxDB(dbhost, dbport, dbname, "DCTMezz", curGW,
                            keyname="gateway",
                            tagN="config", tagV="network")
@@ -161,7 +161,7 @@ def main(i2c, bmeaddr, bmePwr, dbconfig, wlstuff, loops=10):
             print()
 
             # Given the fact that this is a wifi sensor, we only should
-            #   attempt a measurement if the wifi is good.  So keep this 
+            #   attempt a measurement if the wifi is good.  So keep this
             #   all in the .isconnected() block!
             print("Turning BME on ...")
             bmePwr.on()
@@ -212,9 +212,9 @@ def main(i2c, bmeaddr, bmePwr, dbconfig, wlstuff, loops=10):
         print("Sleeping ...")
         for sc in range(0, 60):
             if sc % 10 == 0 and sc != 0:
-                 print("\n")
+                print("\n")
             else:
                 print(".", end='')
             time.sleep(1)
-        
+
         loopCounter += 1
