@@ -1,12 +1,14 @@
 import time
 import webrepl
 import network
+import ubinascii
 
 
 def scanWiFi(wlan):
     try:
         nearbyaps = wlan.scan()
     except OSError as oe:
+        print(str(oe))
         # Sometimes we get an "Wifi Invalid Argument" here
         nearbyaps = []
 
@@ -26,34 +28,60 @@ def startWiFi(disableAP=True):
     return wlan
 
 
-def checkAPs(wlan, knownaps, nearbyaps):
+def checkAPList(knownaps, nearbyaps):
     # Check to see if any match
-    found = []
     strongest = -10000
-    bestssid = None
+    bestAP = {}
 
     print("Found the following access points:")
-    for each in nearbyaps:
+    for eachAP in nearbyaps:
         # Check for the wifi access points we know about
         for ap in knownaps.keys():
-            if ap == each[0].decode("UTF-8"):
+            # Decode the parts
+            #   (ssid, bssid, channel, RSSI, authmode, hidden)
+            thisAPName = eachAP[0].decode("UTF-8")
+            thisAPMAC = ubinascii.hexlify(eachAP[1], ':').decode()
+            thisBinMAC = eachAP[1]
+            try:
+                thisAPChan = int(eachAP[2])
+            except ValueError:
+                print("Warning: Error converting %s to int!" % (eachAP[2]))
+                thisAPChan = -9999
+            thisAPRSSI = int(eachAP[3])
+
+            if ap == thisAPName:
                 # Store the name and the signal strength
-                found.append([ap, each[3]])
-                outmsg = "Name: %s\tSignalStrength: %d" % (ap, each[3])
+                # found.append([thisAPName, thisAPMAC, thisAPChan, thisAPRSSI])
+                outmsg = "%s (%s, %s)" % (ap, thisAPMAC, thisAPChan)
+                outmsg += "\t%d dBm" % (thisAPRSSI)
                 print(outmsg)
                 time.sleep(1.5)
                 # Compare current signal strength to our best one
-                if each[3] >= strongest:
-                    strongest = each[3]
-                    bestssid = each[0].decode("UTF-8")
+                if thisAPRSSI >= strongest:
+                    bestAP = {'ssid': thisAPName,
+                              'mac': thisAPMAC,
+                              'binmac': thisBinMAC,
+                              'rssi': thisAPRSSI}
 
-    return found, bestssid, strongest
+                    # Store the winning value for next time
+                    strongest = thisAPRSSI
+
+    return bestAP
 
 
-def connectWiFi(wlan, ssid, rssi, password):
-    print("Connecting to %s with signal strength of %d dB..." % (ssid,
-                                                                 rssi))
-    wlan.connect(ssid, password)
+def connectWiFi(wlan, bestAP, password):
+    ssid = bestAP['ssid']
+
+    mac = bestAP['mac']
+    binmac = bestAP['binmac']
+    rssi = bestAP['rssi']
+    print("Connecting to %s (%s) with signal strength of %d dB" % (ssid, mac,
+                                                                   rssi))
+
+    # The documentation sucks, but bssid should *not* be the string
+    #   version of the desired MAC address
+    wlan.connect(ssid, password, bssid=binmac)
+
     # Give a healthy amount of time for the connection to finish
     time.sleep(5)
 
@@ -84,14 +112,16 @@ def connectWiFi(wlan, ssid, rssi, password):
     return conncheck, wconfig
 
 
-def get_RSSI(wlan, ssid):
+def get_APInfo(wlan, ssid):
     nearby = wlan.scan()
     rssi = -99999
     for each in nearby:
         if ssid == each[0].decode("UTF-8"):
+            bssid = each[1]
+            channel = each[2]
             rssi = each[3]
 
-    return rssi
+    return bssid, channel, rssi
 
 
 def checkWifiStatus(knownaps, wlan=None, conn=None, conf=None, repl=True):
@@ -101,15 +131,13 @@ def checkWifiStatus(knownaps, wlan=None, conn=None, conf=None, repl=True):
         wlan = startWiFi()
         nearbyaps = scanWiFi(wlan)
 
-        # returns ssid's found, strongest ssid name, and strongest's rssi
-        _, bestssid, strongest = checkAPs(wlan, knownaps, nearbyaps)
+        bestAP = checkAPList(knownaps, nearbyaps)
+        bestssid = bestAP['ssid']
 
         conn = False
         if bestssid is not None:
             # Attempt to actually connect
-            conn, conf = connectWiFi(wlan, bestssid,
-                                     strongest,
-                                     knownaps[bestssid])
+            conn, conf = connectWiFi(wlan, bestAP, knownaps[bestssid])
             if repl is True:
                 webrepl.stop()
                 time.sleep(0.5)
@@ -119,4 +147,4 @@ def checkWifiStatus(knownaps, wlan=None, conn=None, conf=None, repl=True):
     else:
         print("WiFi is bueno!")
 
-    return wlan, conn, conf
+    return wlan, conn, conf, apInfo
