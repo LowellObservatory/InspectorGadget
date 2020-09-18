@@ -37,6 +37,7 @@ def postToInfluxDB(influxhost, influxport, dbname,
         print("Posting to %s:%s %s.%s" % (influxhost, influxport,
                                           dbname, metric))
         # print("%s=%s, %s=%s" % (tagN, tagV, keyname, value))
+        print(url)
         print(line)
         response = urequests.post(url, data=line)
         print("Response:", response.status_code, response.text)
