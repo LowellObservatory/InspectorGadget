@@ -143,7 +143,7 @@ def checkWifiStatus(knownaps, wlan=None, conn=None, conf=None, repl=True):
         if wlan.ifconfig()[0] == "0.0.0.0":
             badWifi = True
 
-    if badWifi = True:
+    if badWifi is True:
         print("WiFi is no bueno!")
         # Redo!
         wlan = startWiFi()
