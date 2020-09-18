@@ -6,13 +6,16 @@ import ubinascii
 
 def scanWiFi(wlan):
     try:
+        # Needed because if you're connected, or trying to connect, 
+        #   you'll get this "STA is connecting, scan are not allowed!" 
+        wlan.disconnect()
         nearbyaps = wlan.scan()
     except OSError as oe:
         print(str(oe))
         # Sometimes we get an "Wifi Invalid Argument" here
         nearbyaps = []
 
-    return nearbyaps
+    return nearbyaps, wlan
 
 
 def startWiFi(disableAP=True):
@@ -78,6 +81,8 @@ def connectWiFi(wlan, bestAP, password):
     print("Connecting to %s (%s) with signal strength of %d dB" % (ssid, mac,
                                                                    rssi))
 
+    # Make sure we don't have any lingering connection attemps going on
+    wlan.disconnect()
     # The documentation sucks, but bssid should *not* be the string
     #   version of the desired MAC address
     wlan.connect(ssid, password, bssid=binmac)
@@ -125,11 +130,24 @@ def get_APInfo(wlan, ssid):
 
 
 def checkWifiStatus(knownaps, wlan=None, conn=None, conf=None, repl=True):
+    badWifi = False
+
+    # Check on the state of some things to see if we're really connected
     if (wlan is None) or (wlan.isconnected()) is False:
+        badWifi = True
+    else:
+        # The board thinks we're connected, but it might be confused.
+        #   There might be a few different fail cases that end up here.
+
+        # DHCP likely expired and didn't renew
+        if wlan.ifconfig()[0] == "0.0.0.0":
+            badWifi = True
+
+    if badWifi = True:
         print("WiFi is no bueno!")
         # Redo!
         wlan = startWiFi()
-        nearbyaps = scanWiFi(wlan)
+        nearbyaps, wlan = scanWiFi(wlan)
 
         bestAP = checkAPList(knownaps, nearbyaps)
         bestssid = bestAP['ssid']
@@ -147,4 +165,4 @@ def checkWifiStatus(knownaps, wlan=None, conn=None, conf=None, repl=True):
     else:
         print("WiFi is bueno!")
 
-    return wlan, conn, conf, apInfo
+    return wlan, conn, conf
