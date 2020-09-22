@@ -65,6 +65,7 @@ def main(i2c, bmeaddr, bmePwr, dbconfig, wlstuff, loops=10):
     dbhost = dbconfig['dbhost']
     dbport = dbconfig['dbport']
     dbname = dbconfig['dbname']
+    dbtabl = dbconfig['dbtabl']
 
     wlan = wlstuff['wlan']
     conncheck = wlstuff['conncheck']
@@ -93,31 +94,31 @@ def main(i2c, bmeaddr, bmePwr, dbconfig, wlstuff, loops=10):
                                                                  curRSSI))
             print()
 
-            sV = utils.postToInfluxDB(dbhost, dbport, dbname, "DCTMezz", 
+            sV = utils.postToInfluxDB(dbhost, dbport, dbname, dbtabl, 
                                       curIP, keyname="ipaddress",
                                       tagN="config", tagV="network")
             time.sleep(0.25)
             print()
 
-            sV = utils.postToInfluxDB(dbhost, dbport, dbname, "DCTMezz", 
+            sV = utils.postToInfluxDB(dbhost, dbport, dbname, dbtabl, 
                                       curGW, keyname="gateway",
                                       tagN="config", tagV="network")
             time.sleep(0.25)
             print()
 
-            sV = utils.postToInfluxDB(dbhost, dbport, dbname, "DCTMezz", 
+            sV = utils.postToInfluxDB(dbhost, dbport, dbname, dbtabl, 
                                       curDNS, keyname="dns",
                                       tagN="config", tagV="network")
             time.sleep(0.25)
             print()
 
-            sV = utils.postToInfluxDB(dbhost, dbport, dbname, "DCTMezz", 
+            sV = utils.postToInfluxDB(dbhost, dbport, dbname, dbtabl, 
                                       curAP, keyname="accesspoint",
                                       tagN="config", tagV="network")
             time.sleep(0.25)
             print()
 
-            sV = utils.postToInfluxDB(dbhost, dbport, dbname, "DCTMezz", 
+            sV = utils.postToInfluxDB(dbhost, dbport, dbname, dbtabl, 
                                       curRSSI, keyname="rssi",
                                       tagN="config", tagV="network")
             print()
@@ -143,19 +144,19 @@ def main(i2c, bmeaddr, bmePwr, dbconfig, wlstuff, loops=10):
                 # Do 5 reads, then average them
                 temp, apre, humi = BMEmultivals(sensor, ntries=2, nreads=5)
 
-                utils.postToInfluxDB(dbhost, dbport, dbname, "DCTMezz", temp,
+                utils.postToInfluxDB(dbhost, dbport, dbname, dbtabl, temp,
                                      keyname="temperature",
                                      tagN="sensor", tagV="bme280")
                 time.sleep(0.25)
                 print()
 
-                utils.postToInfluxDB(dbhost, dbport, dbname, "DCTMezz", apre,
+                utils.postToInfluxDB(dbhost, dbport, dbname, dbtabl, apre,
                                      keyname="apparentpressure",
                                      tagN="sensor", tagV="bme280")
                 time.sleep(0.25)
                 print()
 
-                utils.postToInfluxDB(dbhost, dbport, dbname, "DCTMezz", humi,
+                utils.postToInfluxDB(dbhost, dbport, dbname, dbtabl, humi,
                                      keyname="relativehumidity",
                                      tagN="sensor", tagV="bme280")
 
