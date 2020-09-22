@@ -1,48 +1,11 @@
 import gc
 import time
 import machine
-import urequests
 import micropython
 
 import bme280 as bme
+import utils as utils
 import utils_wifi as uwifi
-
-
-def postToInfluxDB(influxhost, influxport, dbname,
-                   metric, value, keyname='value',
-                   tagN=None, tagV=None):
-    """
-    Just using the HTTP endpoint and the simple line protocol.
-
-    Also letting the database time tag it for us.
-    """
-    url = "http://%s:%s/write?db=%s" % (influxhost, influxport, dbname)
-    if (tagN is not None) and (tagV is not None):
-        if isinstance(value, float):
-            line = '%s,%s=%s %s=%.02f' % (metric, tagN, tagV, keyname, value)
-        elif isinstance(value, int):
-            line = '%s,%s=%s %s=%d' % (metric, tagN, tagV, keyname, value)
-        elif isinstance(value, str):
-            line = '%s,%s=%s %s="%s"' % (metric, tagN, tagV, keyname, value)
-    else:
-        if isinstance(value, float):
-            line = '%s %s=%.02f' % (metric, keyname, value)
-        if isinstance(value, int):
-            line = '%s %s=%d' % (metric, keyname, value)
-        elif isinstance(value, str):
-            line = '%s %s="%s"' % (metric, keyname, value)
-
-    # There are few rails here so this could go ... poorly.
-    try:
-        print("Posting to %s:%s %s.%s" % (influxhost, influxport,
-                                          dbname, metric))
-        # print("%s=%s, %s=%s" % (tagN, tagV, keyname, value))
-        print(url)
-        print(line)
-        response = urequests.post(url, data=line)
-        print("Response:", response.status_code, response.text)
-    except Exception as e:
-        print(str(e))
 
 
 def getBMEval(bmesensor):
@@ -128,37 +91,35 @@ def main(i2c, bmeaddr, bmePwr, dbconfig, wlstuff, loops=10):
             print("Connected to %s at %s thru %s at %.0f dBm" % (curAP, curIP,
                                                                  curGW,
                                                                  curRSSI))
-
-            # Note: I'm skipping the subnet because I don't care
             print()
 
-            postToInfluxDB(dbhost, dbport, dbname, "DCTMezz", curIP,
-                           keyname="ipaddress",
-                           tagN="config", tagV="network")
+            sV = utils.postToInfluxDB(dbhost, dbport, dbname, "DCTMezz", 
+                                      curIP, keyname="ipaddress",
+                                      tagN="config", tagV="network")
             time.sleep(0.25)
             print()
 
-            postToInfluxDB(dbhost, dbport, dbname, "DCTMezz", curGW,
-                           keyname="gateway",
-                           tagN="config", tagV="network")
+            sV = utils.postToInfluxDB(dbhost, dbport, dbname, "DCTMezz", 
+                                      curGW, keyname="gateway",
+                                      tagN="config", tagV="network")
             time.sleep(0.25)
             print()
 
-            postToInfluxDB(dbhost, dbport, dbname, "DCTMezz", curDNS,
-                           keyname="dns",
-                           tagN="config", tagV="network")
+            sV = utils.postToInfluxDB(dbhost, dbport, dbname, "DCTMezz", 
+                                      curDNS, keyname="dns",
+                                      tagN="config", tagV="network")
             time.sleep(0.25)
             print()
 
-            postToInfluxDB(dbhost, dbport, dbname, "DCTMezz", curAP,
-                           keyname="accesspoint",
-                           tagN="config", tagV="network")
+            sV = utils.postToInfluxDB(dbhost, dbport, dbname, "DCTMezz", 
+                                      curAP, keyname="accesspoint",
+                                      tagN="config", tagV="network")
             time.sleep(0.25)
             print()
 
-            postToInfluxDB(dbhost, dbport, dbname, "DCTMezz", curRSSI,
-                           keyname="rssi",
-                           tagN="config", tagV="network")
+            sV = utils.postToInfluxDB(dbhost, dbport, dbname, "DCTMezz", 
+                                      curRSSI, keyname="rssi",
+                                      tagN="config", tagV="network")
             print()
 
             # Given the fact that this is a wifi sensor, we only should
@@ -182,21 +143,21 @@ def main(i2c, bmeaddr, bmePwr, dbconfig, wlstuff, loops=10):
                 # Do 5 reads, then average them
                 temp, apre, humi = BMEmultivals(sensor, ntries=2, nreads=5)
 
-                postToInfluxDB(dbhost, dbport, dbname, "DCTMezz", temp,
-                               keyname="temperature",
-                               tagN="sensor", tagV="bme280")
+                utils.postToInfluxDB(dbhost, dbport, dbname, "DCTMezz", temp,
+                                     keyname="temperature",
+                                     tagN="sensor", tagV="bme280")
                 time.sleep(0.25)
                 print()
 
-                postToInfluxDB(dbhost, dbport, dbname, "DCTMezz", apre,
-                               keyname="apparentpressure",
-                               tagN="sensor", tagV="bme280")
+                utils.postToInfluxDB(dbhost, dbport, dbname, "DCTMezz", apre,
+                                     keyname="apparentpressure",
+                                     tagN="sensor", tagV="bme280")
                 time.sleep(0.25)
                 print()
 
-                postToInfluxDB(dbhost, dbport, dbname, "DCTMezz", humi,
-                               keyname="relativehumidity",
-                               tagN="sensor", tagV="bme280")
+                utils.postToInfluxDB(dbhost, dbport, dbname, "DCTMezz", humi,
+                                     keyname="relativehumidity",
+                                     tagN="sensor", tagV="bme280")
 
                 print(temp, apre, humi)
             else:

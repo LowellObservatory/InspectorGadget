@@ -1,5 +1,50 @@
 import time
+import urequests
 from machine import Pin
+
+
+def postToInfluxDB(influxhost, influxport, dbname,
+                   metric, value, keyname='value',
+                   tagN=None, tagV=None):
+    """
+    Just using the HTTP endpoint and the simple line protocol.
+
+    Also letting the database time tag it for us.
+    """
+    success = False
+
+    url = "http://%s:%s/write?db=%s" % (influxhost, influxport, dbname)
+    if (tagN is not None) and (tagV is not None):
+        if isinstance(value, float):
+            line = '%s,%s=%s %s=%.02f' % (metric, tagN, tagV, keyname, value)
+        elif isinstance(value, int):
+            line = '%s,%s=%s %s=%d' % (metric, tagN, tagV, keyname, value)
+        elif isinstance(value, str):
+            line = '%s,%s=%s %s="%s"' % (metric, tagN, tagV, keyname, value)
+    else:
+        if isinstance(value, float):
+            line = '%s %s=%.02f' % (metric, keyname, value)
+        if isinstance(value, int):
+            line = '%s %s=%d' % (metric, keyname, value)
+        elif isinstance(value, str):
+            line = '%s %s="%s"' % (metric, keyname, value)
+
+    # There are few rails here so this could go ... poorly.
+    try:
+        print("Posting to %s:%s %s.%s" % (influxhost, influxport,
+                                          dbname, metric))
+        # print("%s=%s, %s=%s" % (tagN, tagV, keyname, value))
+        print(url)
+        print(line)
+        response = urequests.post(url, data=line)
+        print("Response:", response.status_code, response.text)
+        success = True
+    except OSError as e:
+        print(str(e))
+    except Exception as e:
+        print(str(e))
+
+    return success
 
 
 class shinyThing(object):
