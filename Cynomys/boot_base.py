@@ -64,6 +64,11 @@ with open('./dbconfig.json') as f:
 dlines = dlines.replace('\n', '')
 dbconfig = json.loads(dlines)
 
+# Pack up the wireless info so we can pass it around
+wlconfig = {"wlan": wlan,
+            "wconfig": wconfig,
+            "knownaps": knownaps}
+
 # At this point, you're ready to go.  Define your specific sensor needs,
 #   then import your main loop and call it.
 
