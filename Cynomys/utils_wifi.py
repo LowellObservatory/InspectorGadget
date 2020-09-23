@@ -134,7 +134,7 @@ def checkWifiStatus(knownaps, wlan=None, conf=None, repl=True):
     badWifi = False
 
     # Check on the state of some things to see if we're really connected
-    if (wlan is None) or (wlan.isconnected()) is False or (forcedCheck is True):
+    if (wlan is None) or (wlan.isconnected()) is False:
         badWifi = True
     else:
         # The board thinks we're connected, but it might be confused.
