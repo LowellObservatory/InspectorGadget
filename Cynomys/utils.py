@@ -28,33 +28,28 @@ def postNetConfig(wlan, dbconfig, debug=True):
     #   gather them all up independently and then check but this seemed 
     #   a little faster/easier.
     sV = False
-    sV = utils.postToInfluxDB(dbhost, dbport, dbname, dbtabl, 
-                              curIPs[0], keyname="ipaddress",
-                              tagN="config", tagV="network")
+    sV = postToInfluxDB(dbconfig, curIPs[0], keyname="ipaddress",
+                        tagN="config", tagV="network")
     time.sleep(0.25)
 
     if sV is True:
-        sV = utils.postToInfluxDB(dbhost, dbport, dbname, dbtabl, 
-                                  curIPs[2], keyname="gateway",
-                                  tagN="config", tagV="network")
+        sV = postToInfluxDB(dbconfig, curIPs[2], keyname="gateway",
+                            tagN="config", tagV="network")
         time.sleep(0.25)
 
     if sV is True:
-        sV = utils.postToInfluxDB(dbhost, dbport, dbname, dbtabl, 
-                                  curIPs[3], keyname="dns",
-                                  tagN="config", tagV="network")
+        sV = postToInfluxDB(dbconfig, curIPs[3], keyname="dns",
+                            tagN="config", tagV="network")
         time.sleep(0.25)
 
     if sV is True:
-        sV = utils.postToInfluxDB(dbhost, dbport, dbname, dbtabl, 
-                                  curAP, keyname="accesspoint",
-                                  tagN="config", tagV="network")
+        sV = postToInfluxDB(dbconfig, curAP, keyname="accesspoint",
+                            tagN="config", tagV="network")
         time.sleep(0.25)
 
     if sV is True:
-        sV = utils.postToInfluxDB(dbhost, dbport, dbname, dbtabl, 
-                                  curRSSI, keyname="rssi",
-                                  tagN="config", tagV="network")
+        sV = postToInfluxDB(dbconfig, curRSSI, keyname="rssi",
+                            tagN="config", tagV="network")
 
     return sV
 
