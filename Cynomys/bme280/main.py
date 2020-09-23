@@ -8,7 +8,7 @@ import utils as utils
 import utils_wifi as uwifi
 
 
-def main(knownaps, dbconfig, wlconfig, loops=25):
+def go(knownaps, dbconfig, wlconfig, loops=25):
     """
     Every single board deployment must have this function accepting these
     exact arguments.  Only way to ensure a non-maddening structure!
