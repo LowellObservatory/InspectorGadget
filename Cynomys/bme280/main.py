@@ -14,8 +14,8 @@ def go(knownaps, dbconfig, wlconfig, loops=25):
     exact arguments.  Only way to ensure a non-maddening structure!
     """
     # Unpack the wireless configuration stuff
-    wlan = wlstuff['wlan']
-    wconfig = wlstuff['wconfig']
+    wlan = wlconfig['wlan']
+    wconfig = wlconfig['wconfig']
 
     # Indicate our WiFi connection status
     ledIndicator = utils.shinyThing(pin=19, inverted=False, startBlink=True)
@@ -39,11 +39,10 @@ def go(knownaps, dbconfig, wlconfig, loops=25):
         print("Starting loop %d of %d" % (loopCounter+1, loops))
         print("Checking WiFi status ...")
         # Attempt to connect to one of the strongest of knownaps
-        wlan, conncheck, wconfig = uwifi.checkWifiStatus(knownaps,
-                                                         wlan=wlan,
-                                                         conn=conncheck,
-                                                         conf=wconfig,
-                                                         repl=False)
+        wlan, wconfig = uwifi.checkWifiStatus(knownaps,
+                                              wlan=wlan,
+                                              conf=wconfig,
+                                              repl=False)
 
         # Try to store the connection information
         sV = utils.postNetConfig(wlan, dbconfig)
@@ -57,7 +56,7 @@ def go(knownaps, dbconfig, wlconfig, loops=25):
             #   That lets us skip the rest so we can get a WiFi status check 
             #   sooner rather than later
             if sV is True:
-                startBMELoop(bmePwr, dbconfig)
+                doBME(i2c, bmeaddr, bmePwr, dbconfig)
 
         gc.collect()
         # Print some memory statistics so I can watch for problems
@@ -78,7 +77,7 @@ def go(knownaps, dbconfig, wlconfig, loops=25):
     machine.reset()
 
 
-def doBME(bmePwr, dbconfig):
+def doBME(i2c, bmeaddr, bmePwr, dbconfig):
     """
     """
     print("Turning BME on ...")
