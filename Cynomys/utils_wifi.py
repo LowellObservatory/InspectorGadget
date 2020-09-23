@@ -90,11 +90,10 @@ def connectWiFi(wlan, bestAP, password):
     # Give a healthy amount of time for the connection to finish
     time.sleep(5)
 
-    # Check to see if we're done yet, using these as flags
+    # Keep a count on how many times we've tried
     tries = 0
-    conncheck = False
 
-    while conncheck is False:
+    while wlan.isconnected() is False:
         print("Connecting...")
         conncheck = wlan.isconnected()
         time.sleep(1)
@@ -106,7 +105,7 @@ def connectWiFi(wlan, bestAP, password):
             time.sleep(5)
             break
 
-    if conncheck is True:
+    if wlan.isconnected() is True:
         print("Connected!")
         wconfig = wlan.ifconfig()
         print("Current IP: %s" % (wconfig[0]))
@@ -129,9 +128,9 @@ def get_APInfo(wlan, ssid):
     return bssid, channel, rssi
 
 
-def checkWifiStatus(knownaps, wlan=None, conn=None, conf=None, repl=True, 
-                    forcedCheck=False):
-
+def checkWifiStatus(knownaps, wlan=None, conf=None, repl=True):
+    """
+    """
     badWifi = False
 
     # Check on the state of some things to see if we're really connected
@@ -151,8 +150,11 @@ def checkWifiStatus(knownaps, wlan=None, conn=None, conf=None, repl=True,
         wlan = startWiFi()
         nearbyaps, wlan = scanWiFi(wlan)
 
-        bestAP = checkAPList(knownaps, nearbyaps)
-        bestssid = bestAP['ssid']
+        bestAP = None
+        bestssid = None
+        if knownaps is not None:
+            bestAP = checkAPList(knownaps, nearbyaps)
+            bestssid = bestAP['ssid']
 
         if bestssid is not None:
             # Attempt to actually connect

@@ -8,6 +8,76 @@ import utils as utils
 import utils_wifi as uwifi
 
 
+def main(knownaps, dbconfig, wlconfig, loops=25):
+    """
+    Every single board deployment must have this function accepting these
+    exact arguments.  Only way to ensure a non-maddening structure!
+    """
+    # Unpack the wireless configuration stuff
+    wlan = wlstuff['wlan']
+    wconfig = wlstuff['wconfig']
+
+    # Indicate our WiFi connection status
+    ledIndicator = utils.shinyThing(pin=19, inverted=False, startBlink=True)
+    if wlan.isconnected() is True:
+        ledIndicator.off()
+    else:
+        utils.blinken(ledIndicator, 0.25, 10)
+        ledIndicator.on()
+
+    # Set up the BME280 power (transistor) switch and the i2c bus
+    bmeaddr = 0x77
+    bmePwr = machine.Pin(27, machine.Pin.OUT)
+    bmePwr.on()
+    time.sleep(1)
+    bmePwr.off()
+    i2c = machine.I2C(scl=machine.Pin(22), sda=machine.Pin(21), freq=100000)
+
+    loopCounter = 0
+    while loopCounter < loops:
+        print("")
+        print("Starting loop %d of %d" % (loopCounter+1, loops))
+        print("Checking WiFi status ...")
+        # Attempt to connect to one of the strongest of knownaps
+        wlan, conncheck, wconfig = uwifi.checkWifiStatus(knownaps,
+                                                         wlan=wlan,
+                                                         conn=conncheck,
+                                                         conf=wconfig,
+                                                         repl=False)
+
+        # Try to store the connection information
+        sV = utils.postNetConfig(wlan, dbconfig)
+
+        # We only should attempt a measurement if the wifi is good, so 
+        #   keep this all in the conditional!
+        if wlan.isconnected() is True:
+            sV = utils.postNetConfig(wlan, dbconfig)
+
+            # If the network config dropped out suddenly, sV will be false.
+            #   That lets us skip the rest so we can get a WiFi status check 
+            #   sooner rather than later
+            if sV is True:
+                startBMELoop(bmePwr, dbconfig)
+
+        gc.collect()
+        # Print some memory statistics so I can watch for problems
+        micropython.mem_info()
+        print("Sleeping ...\n")
+        for sc in range(0, 60):
+            if sc % 10 == 0 and sc != 0:
+                print("\n")
+            else:
+                print(".", end='')
+            time.sleep(1)
+
+        loopCounter += 1
+
+    # Since we're at the end of our rope here, drop the hammer and reset
+    print("Resetting in 5 seconds ...")
+    time.sleep(5)
+    machine.reset()
+
+
 def doBME(bmePwr, dbconfig):
     """
     """
@@ -104,49 +174,3 @@ def BMEmultivals(bmesensor, ntries=2, nreads=5, delay=0.1):
         humidity = -9999.
 
     return temperature, apparentpressure, humidity
-
-
-def main(i2c, bmeaddr, bmePwr, dbconfig, wlstuff, loops=10):
-    wlan = wlstuff['wlan']
-    conncheck = wlstuff['conncheck']
-    wconfig = wlstuff['wconfig']
-    knownaps = wlstuff['knownaps']
-
-    loopCounter = 0
-    while loopCounter < loops:
-        print("")
-        print("Starting loop %d of %d" % (loopCounter+1, loops))
-        print("Checking WiFi status ...")
-        # Attempt to connect to one of the strongest of knownaps
-        wlan, conncheck, wconfig = uwifi.checkWifiStatus(knownaps,
-                                                         wlan=wlan,
-                                                         conn=conncheck,
-                                                         conf=wconfig,
-                                                         repl=False)
-
-        # Try to store the connection information
-        sV = utils.postNetConfig(wlan, dbconfig)
-
-        # We only should attempt a measurement if the wifi is good, so 
-        #   keep this all in the conditional!
-        if wlan.isconnected() is True:
-            sV = utils.postNetConfig(wlan, dbconfig)
-
-            # If the network config dropped out suddenly, sV will be false.
-            #   That lets us skip the rest so we can get a WiFi status check 
-            #   sooner rather than later
-            if sV is True:
-                startBMELoop(bmePwr, dbconfig)
-
-        gc.collect()
-        # Print some memory statistics so I can watch for problems
-        micropython.mem_info()
-        print("Sleeping ...\n")
-        for sc in range(0, 60):
-            if sc % 10 == 0 and sc != 0:
-                print("\n")
-            else:
-                print(".", end='')
-            time.sleep(1)
-
-        loopCounter += 1
