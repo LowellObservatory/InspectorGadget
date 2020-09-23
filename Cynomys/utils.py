@@ -3,14 +3,73 @@ import urequests
 from machine import Pin
 
 
-def postToInfluxDB(influxhost, influxport, dbname,
-                   metric, value, keyname='value',
-                   tagN=None, tagV=None):
+def postNetConfig(wlan, dbconfig, debug=True):
+    """
+    """
+    # Quick and early exit
+    if wlan.isconnected() is False:
+        sV = False
+        return sV
+
+    # curIPs: ip, subnet, gateway, dns
+    curIPs = wlan.ifconfig()
+    curAP = wlan.config('essid')
+    curRSSI = wlan.status('rssi')
+
+    if debug is True:
+        print("Connected to %s at %s thru %s at %.0f dBm\n" % (curAP, 
+                                                               curIPs[0],
+                                                               curIPs[2],
+                                                               curRSSI))
+
+    # We always try at least once, but we check before trying again
+    #   Logic is a bit clunky but it'll work.  This makes it so once sV 
+    #   goes False, it stays False and is returned.  I suppose I could
+    #   gather them all up independently and then check but this seemed 
+    #   a little faster/easier.
+    sV = False
+    sV = utils.postToInfluxDB(dbhost, dbport, dbname, dbtabl, 
+                              curIPs[0], keyname="ipaddress",
+                              tagN="config", tagV="network")
+    time.sleep(0.25)
+
+    if sV is True:
+        sV = utils.postToInfluxDB(dbhost, dbport, dbname, dbtabl, 
+                                  curIPs[2], keyname="gateway",
+                                  tagN="config", tagV="network")
+        time.sleep(0.25)
+
+    if sV is True:
+        sV = utils.postToInfluxDB(dbhost, dbport, dbname, dbtabl, 
+                                  curIPs[3], keyname="dns",
+                                  tagN="config", tagV="network")
+        time.sleep(0.25)
+
+    if sV is True:
+        sV = utils.postToInfluxDB(dbhost, dbport, dbname, dbtabl, 
+                                  curAP, keyname="accesspoint",
+                                  tagN="config", tagV="network")
+        time.sleep(0.25)
+
+    if sV is True:
+        sV = utils.postToInfluxDB(dbhost, dbport, dbname, dbtabl, 
+                                  curRSSI, keyname="rssi",
+                                  tagN="config", tagV="network")
+
+    return sV
+
+
+def postToInfluxDB(dbconfig, value, keyname='value', tagN=None, tagV=None):
     """
     Just using the HTTP endpoint and the simple line protocol.
 
     Also letting the database time tag it for us.
     """
+    influxhost = dbconfig['dbhost']
+    influxport = dbconfig['dbport']
+    dbname = dbconfig['dbname']
+    metric = dbconfig['dbtabl']
+
     success = False
 
     url = "http://%s:%s/write?db=%s" % (influxhost, influxport, dbname)

@@ -35,10 +35,10 @@ knownaps = json.loads(klines)
 
 # Attempt to connect to one of the strongest of knownaps
 #   If repl is True, start the webrepl too
-wlan, conncheck, wconfig = uwifi.checkWifiStatus(knownaps, repl=True)
+wlan, wconfig = uwifi.checkWifiStatus(knownaps, repl=True)
 
 if ledIndicator is not None:
-    if conncheck is True:
+    if wlan.isconnected() is True:
         ledIndicator.off()
     else:
         utils.blinken(ledIndicator, 0.25, 10)
