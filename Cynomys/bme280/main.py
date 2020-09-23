@@ -50,8 +50,6 @@ def go(knownaps, dbconfig, wlconfig, loops=25):
         # We only should attempt a measurement if the wifi is good, so 
         #   keep this all in the conditional!
         if wlan.isconnected() is True:
-            sV = utils.postNetConfig(wlan, dbconfig)
-
             # If the network config dropped out suddenly, sV will be false.
             #   That lets us skip the rest so we can get a WiFi status check 
             #   sooner rather than later
