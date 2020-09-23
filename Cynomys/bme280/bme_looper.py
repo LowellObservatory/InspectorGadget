@@ -8,6 +8,50 @@ import utils as utils
 import utils_wifi as uwifi
 
 
+def doBME(bmePwr, dbconfig):
+    """
+    """
+    print("Turning BME on ...")
+    bmePwr.on()
+    time.sleep(1)
+
+    try:
+        sensor = bme.BME280(i2c=i2c, address=bmeaddr)
+    except Exception as e:
+        print(str(e))
+        sensor = None
+
+    if sensor is not None:
+        # Toss the first read just in case it's junk/not settled
+        _ = getBMEval(sensor)
+        time.sleep(1)
+
+        # Do 5 reads, which are then averaged and returned
+        temp, apre, humi = BMEmultivals(sensor, ntries=2, nreads=5)
+
+        sV = utils.postToInfluxDB(dbconfig, temp, keyname="temperature",
+                                  tagN="sensor", tagV="bme280")
+        time.sleep(0.25)
+        print()
+
+        sV = utils.postToInfluxDB(dbconfig, apre, keyname="apparentpressure",
+                                  tagN="sensor", tagV="bme280")
+        time.sleep(0.25)
+        print()
+
+        sV = utils.postToInfluxDB(dbconfig, humi, keyname="relativehumidity",
+                                  tagN="sensor", tagV="bme280")
+
+        print(temp, apre, humi)
+    else:
+        print("No BME sensor found or error establishing it!")
+        print("Aborting...")
+
+    print("Turning BME off ...")
+    bmePwr.off()
+    print()
+
+
 def getBMEval(bmesensor):
     """
     """
@@ -49,6 +93,7 @@ def BMEmultivals(bmesensor, ntries=2, nreads=5, delay=0.1):
         time.sleep(delay)
 
     if (vals is not None) and (valid > 0):
+        # Actually average the values we found
         temperature = vals[0]/valid
         apparentpressure = vals[1]/valid
         humidity = vals[2]/valid
@@ -62,11 +107,6 @@ def BMEmultivals(bmesensor, ntries=2, nreads=5, delay=0.1):
 
 
 def main(i2c, bmeaddr, bmePwr, dbconfig, wlstuff, loops=10):
-    dbhost = dbconfig['dbhost']
-    dbport = dbconfig['dbport']
-    dbname = dbconfig['dbname']
-    dbtabl = dbconfig['dbtabl']
-
     wlan = wlstuff['wlan']
     conncheck = wlstuff['conncheck']
     wconfig = wlstuff['wconfig']
@@ -84,95 +124,24 @@ def main(i2c, bmeaddr, bmePwr, dbconfig, wlstuff, loops=10):
                                                          conf=wconfig,
                                                          repl=False)
 
-        # Store the connection information, if it's valid
+        # Try to store the connection information
+        sV = utils.postNetConfig(wlan, dbconfig)
+
+        # We only should attempt a measurement if the wifi is good, so 
+        #   keep this all in the conditional!
         if wlan.isconnected() is True:
-            curIP, curSN, curGW, curDNS = wlan.ifconfig()
-            curAP = wlan.config('essid')
-            curRSSI = wlan.status('rssi')
-            print("Connected to %s at %s thru %s at %.0f dBm" % (curAP, curIP,
-                                                                 curGW,
-                                                                 curRSSI))
-            print()
+            sV = utils.postNetConfig(wlan, dbconfig)
 
-            sV = utils.postToInfluxDB(dbhost, dbport, dbname, dbtabl, 
-                                      curIP, keyname="ipaddress",
-                                      tagN="config", tagV="network")
-            time.sleep(0.25)
-            print()
-
-            sV = utils.postToInfluxDB(dbhost, dbport, dbname, dbtabl, 
-                                      curGW, keyname="gateway",
-                                      tagN="config", tagV="network")
-            time.sleep(0.25)
-            print()
-
-            sV = utils.postToInfluxDB(dbhost, dbport, dbname, dbtabl, 
-                                      curDNS, keyname="dns",
-                                      tagN="config", tagV="network")
-            time.sleep(0.25)
-            print()
-
-            sV = utils.postToInfluxDB(dbhost, dbport, dbname, dbtabl, 
-                                      curAP, keyname="accesspoint",
-                                      tagN="config", tagV="network")
-            time.sleep(0.25)
-            print()
-
-            sV = utils.postToInfluxDB(dbhost, dbport, dbname, dbtabl, 
-                                      curRSSI, keyname="rssi",
-                                      tagN="config", tagV="network")
-            print()
-
-            # Given the fact that this is a wifi sensor, we only should
-            #   attempt a measurement if the wifi is good.  So keep this
-            #   all in the .isconnected() block!
-            print("Turning BME on ...")
-            bmePwr.on()
-            time.sleep(1)
-
-            try:
-                sensor = bme.BME280(i2c=i2c, address=bmeaddr)
-            except Exception as e:
-                print(str(e))
-                sensor = None
-
-            if sensor is not None:
-                # First read is probably junk so just toss it
-                _ = getBMEval(sensor)
-                time.sleep(1)
-
-                # Do 5 reads, then average them
-                temp, apre, humi = BMEmultivals(sensor, ntries=2, nreads=5)
-
-                utils.postToInfluxDB(dbhost, dbport, dbname, dbtabl, temp,
-                                     keyname="temperature",
-                                     tagN="sensor", tagV="bme280")
-                time.sleep(0.25)
-                print()
-
-                utils.postToInfluxDB(dbhost, dbport, dbname, dbtabl, apre,
-                                     keyname="apparentpressure",
-                                     tagN="sensor", tagV="bme280")
-                time.sleep(0.25)
-                print()
-
-                utils.postToInfluxDB(dbhost, dbport, dbname, dbtabl, humi,
-                                     keyname="relativehumidity",
-                                     tagN="sensor", tagV="bme280")
-
-                print(temp, apre, humi)
-            else:
-                print("No BME sensor found or error establishing it!")
-                print("Aborting...")
-
-            print("Turning BME off ...")
-            bmePwr.off()
-            print()
+            # If the network config dropped out suddenly, sV will be false.
+            #   That lets us skip the rest so we can get a WiFi status check 
+            #   sooner rather than later
+            if sV is True:
+                startBMELoop(bmePwr, dbconfig)
 
         gc.collect()
         # Print some memory statistics so I can watch for problems
         micropython.mem_info()
-        print("Sleeping ...")
+        print("Sleeping ...\n")
         for sc in range(0, 60):
             if sc % 10 == 0 and sc != 0:
                 print("\n")

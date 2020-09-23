@@ -114,7 +114,7 @@ def connectWiFi(wlan, bestAP, password):
         print("Failed to connect!")
         wconfig = None
 
-    return conncheck, wconfig
+    return wconfig
 
 
 def get_APInfo(wlan, ssid):
@@ -129,11 +129,13 @@ def get_APInfo(wlan, ssid):
     return bssid, channel, rssi
 
 
-def checkWifiStatus(knownaps, wlan=None, conn=None, conf=None, repl=True):
+def checkWifiStatus(knownaps, wlan=None, conn=None, conf=None, repl=True, 
+                    forcedCheck=False):
+
     badWifi = False
 
     # Check on the state of some things to see if we're really connected
-    if (wlan is None) or (wlan.isconnected()) is False:
+    if (wlan is None) or (wlan.isconnected()) is False or (forcedCheck is True):
         badWifi = True
     else:
         # The board thinks we're connected, but it might be confused.
@@ -152,10 +154,9 @@ def checkWifiStatus(knownaps, wlan=None, conn=None, conf=None, repl=True):
         bestAP = checkAPList(knownaps, nearbyaps)
         bestssid = bestAP['ssid']
 
-        conn = False
         if bestssid is not None:
             # Attempt to actually connect
-            conn, conf = connectWiFi(wlan, bestAP, knownaps[bestssid])
+            conf = connectWiFi(wlan, bestAP, knownaps[bestssid])
             if repl is True:
                 webrepl.stop()
                 time.sleep(0.5)
@@ -165,4 +166,4 @@ def checkWifiStatus(knownaps, wlan=None, conn=None, conf=None, repl=True):
     else:
         print("WiFi is bueno!")
 
-    return wlan, conn, conf
+    return wlan, conf
