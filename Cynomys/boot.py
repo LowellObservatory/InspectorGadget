@@ -74,7 +74,7 @@ if __name__ == "__main__":
     knownaps, dbconfig, wlconfig = init()
     if main is not None:
         if knownaps is not None and dbconfig is not None:
-            main(knownaps, dbconfig, wlconfig, loops=25)
+            main.go(knownaps, dbconfig, wlconfig, loops=25)
         else:
             print("WiFi and database configurations are null.")
             print("Aborting main loop start!")
