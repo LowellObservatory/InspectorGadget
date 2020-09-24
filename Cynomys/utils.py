@@ -90,7 +90,6 @@ def postToInfluxDB(dbconfig, value, keyname='value', tagN=None, tagV=None):
 
     print("Using HTTP URL:")
     print(url)
-    url = "http://%s:%s/write?db=%s" % (host, port, dbname)
 
     if (tagN is not None) and (tagV is not None):
         if isinstance(value, float):

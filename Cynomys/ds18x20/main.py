@@ -1,6 +1,7 @@
 import gc
 import time
 import machine
+import binascii
 import micropython
 
 import onewire
@@ -53,7 +54,7 @@ def go(knownaps, dbconfig, wlconfig, loops=25):
             #   That lets us skip the rest so we can get a WiFi status check 
             #   sooner rather than later
             if sV is True:
-                doDS18x(ds, dbconfig)
+                doDS18x(ds, dbconfig, led=ledIndicator)
 
         gc.collect()
         # Print some memory statistics so I can watch for problems
@@ -74,7 +75,7 @@ def go(knownaps, dbconfig, wlconfig, loops=25):
     machine.reset()
 
 
-def doDS18x(ds, dbconfig):
+def doDS18x(ds, dbconfig, led=None):
     """
     """
     if led is not None:
@@ -92,7 +93,6 @@ def doDS18x(ds, dbconfig):
     for sensor in avgs:
         thistemp = avgs[sensor]
         print("Posting %s to influxdb..." % (sensor))
-        # "DyerDome"
         sV = utils.postToInfluxDB(dbconfig, thistemp, keyname="Temperature",
                                   tagN="DS18x20Sensor", tagV=sensor)
 
