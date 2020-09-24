@@ -60,14 +60,38 @@ def postToInfluxDB(dbconfig, value, keyname='value', tagN=None, tagV=None):
 
     Also letting the database time tag it for us.
     """
-    influxhost = dbconfig['dbhost']
-    influxport = dbconfig['dbport']
+    host = dbconfig['dbhost']
+    port = dbconfig['dbport']
     dbname = dbconfig['dbname']
     metric = dbconfig['dbtabl']
 
+    dbuser = None
+    dbpass = None
+    try:
+        dbuser = dbconfig['dbuser']
+    except KeyError:
+        # print("No database user found")
+        pass
+
+    if dbuser is not None:
+        try:
+            dbpass = dbconfig['dbpass']
+        except KeyError:
+            pass
+            # print("DB user defined, but no password given!")
+    
     success = False
 
-    url = "http://%s:%s/write?db=%s" % (influxhost, influxport, dbname)
+    if dbuser is not None and dbpass is not None:
+        url = "http://%s:%s/write?u=%s&p=%s&db=%s" % (host, port,
+                                                      dbuser, dbpass, dbname)
+    else:
+        url = "http://%s:%s/write?db=%s" % (host, port, dbname)
+
+    print("Using HTTP URL:")
+    print(url)
+    url = "http://%s:%s/write?db=%s" % (host, port, dbname)
+
     if (tagN is not None) and (tagV is not None):
         if isinstance(value, float):
             line = '%s,%s=%s %s=%.02f' % (metric, tagN, tagV, keyname, value)
@@ -85,7 +109,7 @@ def postToInfluxDB(dbconfig, value, keyname='value', tagN=None, tagV=None):
 
     # There are few rails here so this could go ... poorly.
     try:
-        print("Posting to %s:%s %s.%s" % (influxhost, influxport,
+        print("Posting to %s:%s %s.%s" % (host, port,
                                           dbname, metric))
         # print("%s=%s, %s=%s" % (tagN, tagV, keyname, value))
         print(url)
