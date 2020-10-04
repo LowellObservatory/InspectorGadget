@@ -154,7 +154,8 @@ def checkWifiStatus(knownaps, wlan=None, conf=None, repl=True):
         bestssid = None
         if knownaps is not None:
             bestAP = checkAPList(knownaps, nearbyaps)
-            bestssid = bestAP['ssid']
+            if bestAP != {}:
+                bestssid = bestAP['ssid']
 
         if bestssid is not None:
             # Attempt to actually connect
