@@ -8,12 +8,14 @@ import utils as utils
 import utils_wifi as uwifi
 
 
-def go(knownaps, dbconfig, wlconfig, loops=25):
+def go(deviceid, config, wlconfig, loops=25):
     """
     Every single board deployment must have this function accepting these
     exact arguments.  Only way to ensure a non-maddening structure!
     """
-    # Unpack the wireless configuration stuff
+    # Unpack the things
+    knownaps = config['knownaps']
+    dbconfig = config['dbconfig']
     wlan = wlconfig['wlan']
     wconfig = wlconfig['wconfig']
 
@@ -45,16 +47,16 @@ def go(knownaps, dbconfig, wlconfig, loops=25):
                                               repl=False)
 
         # Try to store the connection information
-        sV = utils.postNetConfig(wlan, dbconfig)
+        sV = utils.postNetConfig(wlan, dbconfig, tagname=deviceid)
 
-        # We only should attempt a measurement if the wifi is good, so 
+        # We only should attempt a measurement if the wifi is good, so
         #   keep this all in the conditional!
         if wlan.isconnected() is True:
             # If the network config dropped out suddenly, sV will be false.
-            #   That lets us skip the rest so we can get a WiFi status check 
+            #   That lets us skip the rest so we can get a WiFi status check
             #   sooner rather than later
             if sV is True:
-                doBME(i2c, bmeaddr, bmePwr, dbconfig)
+                doBME(i2c, bmeaddr, bmePwr, dbconfig, tagname=deviceid)
 
         gc.collect()
         # Print some memory statistics so I can watch for problems
@@ -75,7 +77,7 @@ def go(knownaps, dbconfig, wlconfig, loops=25):
     machine.reset()
 
 
-def doBME(i2c, bmeaddr, bmePwr, dbconfig):
+def doBME(i2c, bmeaddr, bmePwr, dbconfig, tagname='sensor'):
     """
     """
     print("Turning BME on ...")
@@ -97,17 +99,17 @@ def doBME(i2c, bmeaddr, bmePwr, dbconfig):
         temp, apre, humi = BMEmultivals(sensor, ntries=2, nreads=5)
 
         sV = utils.postToInfluxDB(dbconfig, temp, keyname="temperature",
-                                  tagN="sensor", tagV="bme280")
+                                  tagN=tagname, tagV="bme280")
         time.sleep(0.25)
         print()
 
         sV = utils.postToInfluxDB(dbconfig, apre, keyname="apparentpressure",
-                                  tagN="sensor", tagV="bme280")
+                                  tagN=tagname, tagV="bme280")
         time.sleep(0.25)
         print()
 
         sV = utils.postToInfluxDB(dbconfig, humi, keyname="relativehumidity",
-                                  tagN="sensor", tagV="bme280")
+                                  tagN=tagname, tagV="bme280")
 
         print(temp, apre, humi)
     else:
