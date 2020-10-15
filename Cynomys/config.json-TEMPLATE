@@ -1,0 +1,9 @@
+{"deviceid": "YourNodeNameHere",
+ "knownaps": {"ssid1": "ssid1password",
+              "ssid2": "ssid2password"
+             },
+ "dbconfig": {"dbhost": "0.0.0.42",
+              "dbport": 8086,
+              "dbname": "YourTableNameHere",
+              "dbtabl": "YourMetricNameHere"}
+}
