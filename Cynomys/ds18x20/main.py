@@ -153,6 +153,7 @@ def DS18x20multiread(dssens, nreads=5, delay=0.1):
                 #   specific MP build being used?  It's weird.
                 #   https://forum.micropython.org/viewtopic.php?t=7135
                 temp = None
+                print(str(err))
 
             if temp is not None:
                 try:
