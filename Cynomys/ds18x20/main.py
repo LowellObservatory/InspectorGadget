@@ -47,11 +47,11 @@ def go(knownaps, dbconfig, wlconfig, loops=25):
         # Try to store the connection information
         sV = utils.postNetConfig(wlan, dbconfig)
 
-        # We only should attempt a measurement if the wifi is good, so 
+        # We only should attempt a measurement if the wifi is good, so
         #   keep this all in the conditional!
         if wlan.isconnected() is True:
             # If the network config dropped out suddenly, sV will be false.
-            #   That lets us skip the rest so we can get a WiFi status check 
+            #   That lets us skip the rest so we can get a WiFi status check
             #   sooner rather than later
             if sV is True:
                 doDS18x(ds, dbconfig, led=ledIndicator)
@@ -143,19 +143,26 @@ def DS18x20multiread(dssens, nreads=5, delay=0.1):
             dssens.convert_temp()
             time.sleep_ms(750)
             print("convert_temp finished")
-            temp = dssens.read_temp(rom)
-
-            romStr = binascii.hexlify(rom).decode('ascii')
-            print(time.time(), romStr, temp)
-
             try:
-                storedVals = allvals[romStr]
-                storedVals.append(temp)
-            except KeyError:
-                # This means we haven't stored anything yet, so store it
-                storedVals = [temp]
+                temp = dssens.read_temp(rom)
+                romStr = binascii.hexlify(rom).decode('ascii')
+                print(time.time(), romStr, temp)
+            except Exception as err:
+                # The ds18x20 lib just raises 'Exception' if there's a CRC err
+                #   The CRC error seems to be random and depends on the
+                #   specific MP build being used?  It's weird.
+                #   https://forum.micropython.org/viewtopic.php?t=7135
+                temp = None
 
-            allvals.update({romStr: storedVals})
+            if temp is not None:
+                try:
+                    storedVals = allvals[romStr]
+                    storedVals.append(temp)
+                except KeyError:
+                    # This means we haven't stored anything yet, so store it
+                    storedVals = [temp]
+
+                allvals.update({romStr: storedVals})
 
         time.sleep(delay)
 
