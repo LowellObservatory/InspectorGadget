@@ -3,6 +3,7 @@ import time
 import machine
 import binascii
 import micropython
+from machine import WDT
 
 import onewire
 import ds18x20
@@ -33,10 +34,13 @@ def go(knownaps, dbconfig, wlconfig, loops=25):
     ow = onewire.OneWire(dsPin)
     ds = ds18x20.DS18X20(ow)
 
+    # Set up our last ditch hang preventer
+    wdt = WDT(timeout=20000)
     loopCounter = 0
     while loopCounter < loops:
-        print("")
-        print("Starting loop %d of %d" % (loopCounter+1, loops))
+        # Feed the dog. We'll do this a bunch since wifi can be slow
+        wdt.feed()
+        print("\nStarting loop %d of %d" % (loopCounter+1, loops))
         print("Checking WiFi status ...")
         # Attempt to connect to one of the strongest of knownaps
         wlan, wconfig = uwifi.checkWifiStatus(knownaps,
@@ -45,6 +49,7 @@ def go(knownaps, dbconfig, wlconfig, loops=25):
                                               repl=False)
 
         # Try to store the connection information
+        wdt.feed()
         sV = utils.postNetConfig(wlan, dbconfig)
 
         # We only should attempt a measurement if the wifi is good, so
@@ -54,6 +59,7 @@ def go(knownaps, dbconfig, wlconfig, loops=25):
             #   That lets us skip the rest so we can get a WiFi status check
             #   sooner rather than later
             if sV is True:
+                wdt.feed()
                 doDS18x(ds, dbconfig, led=ledIndicator)
 
         gc.collect()
@@ -66,6 +72,7 @@ def go(knownaps, dbconfig, wlconfig, loops=25):
             else:
                 print(".", end='')
             time.sleep(1)
+            wdt.feed()
 
         loopCounter += 1
 
@@ -81,20 +88,31 @@ def doDS18x(ds, dbconfig, led=None):
     if led is not None:
         led.on()
 
-    # First read is probably junk so just toss it
-    print("Grabbing initial/throwaway value...")
-    _ = getDS18x20val(ds)
-    time.sleep(1)
+    try:
+        # First read can be junk/noisy so just toss it
+        print("Grabbing initial/throwaway value...")
+        _ = getDS18x20val(ds)
+        time.sleep(1)
 
-    # Do 5 reads, then average them
-    avgs = DS18x20multiread(ds, nreads=5, delay=1.0)
-    print("Grabbed all values and averaged them!")
+        # Do 5 reads, then average them
+        avgs = DS18x20multiread(ds, nreads=5, delay=1.0)
+        print("Grabbed all values and averaged them!")
 
-    for sensor in avgs:
-        thistemp = avgs[sensor]
-        print("Posting %s to influxdb..." % (sensor))
-        sV = utils.postToInfluxDB(dbconfig, thistemp, keyname="Temperature",
-                                  tagN="DS18x20Sensor", tagV=sensor)
+        for sensor in avgs:
+            thistemp = avgs[sensor]
+            print("Posting %s to influxdb..." % (sensor))
+            sV = utils.postToInfluxDB(dbconfig, thistemp,
+                                      keyname="Temperature",
+                                      tagN="DS18x20Sensor", tagV=sensor)
+            print("Posting succeeded: %s" % (sV))
+    except Exception as err:
+        # The ds18x20 lib just raises 'Exception' if there's a CRC err
+        #   The CRC error seems to be random and depends on the
+        #   specific MP build being used?  It's weird.
+        #   https://forum.micropython.org/viewtopic.php?t=7135
+        # Decided to trap it here in the meta loop rather than
+        #   in the helper functions since
+        print(str(err))
 
     if led is not None:
         led.off()
@@ -102,6 +120,7 @@ def doDS18x(ds, dbconfig, led=None):
 
 def getDS18x20val(dssens):
     """
+    Make sure to trap this in a try...except block to catch CRC exceptions
     """
     # Get the list of DS18x20 sensors on the onewire bus
     print("Scanning for devices...")
@@ -111,12 +130,10 @@ def getDS18x20val(dssens):
     dssens.convert_temp()
     time.sleep_ms(750)
     print("convert_temp finished")
-
     # Read each sensor we find on the bus and store their values
     retvals = {}
     for rom in roms:
         temp = dssens.read_temp(rom)
-
         romStr = binascii.hexlify(rom).decode('ascii')
         print(time.time(), romStr, temp)
         retvals.update({romStr: temp})
@@ -126,6 +143,7 @@ def getDS18x20val(dssens):
 
 def DS18x20multiread(dssens, nreads=5, delay=0.1):
     """
+    Make sure to trap this in a try...except block to catch CRC exceptions
     """
     allvals = {}
     avgvals = {}
@@ -135,25 +153,15 @@ def DS18x20multiread(dssens, nreads=5, delay=0.1):
     roms = dssens.scan()
 
     # Read each sensor we find on the bus and store their values
-
-    retvals = {}
     for rom in roms:
         for i in range(0, nreads):
-            # Initiate the temperature reading. You must sleep for 750ms after
+            # You must sleep for 750ms after starting convert_temp
             dssens.convert_temp()
             time.sleep_ms(750)
             print("convert_temp finished")
-            try:
-                temp = dssens.read_temp(rom)
-                romStr = binascii.hexlify(rom).decode('ascii')
-                print(time.time(), romStr, temp)
-            except Exception as err:
-                # The ds18x20 lib just raises 'Exception' if there's a CRC err
-                #   The CRC error seems to be random and depends on the
-                #   specific MP build being used?  It's weird.
-                #   https://forum.micropython.org/viewtopic.php?t=7135
-                temp = None
-                print(str(err))
+            temp = dssens.read_temp(rom)
+            romStr = binascii.hexlify(rom).decode('ascii')
+            print(time.time(), romStr, temp)
 
             if temp is not None:
                 try:
