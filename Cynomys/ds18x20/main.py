@@ -12,12 +12,14 @@ import utils as utils
 import utils_wifi as uwifi
 
 
-def go(knownaps, dbconfig, wlconfig, loops=25):
+def go(deviceid, config, wlconfig, loops=25):
     """
     Every single board deployment must have this function accepting these
     exact arguments.  Only way to ensure a non-maddening structure!
     """
-    # Unpack the wireless configuration stuff
+    # Unpack the things
+    knownaps = config['knownaps']
+    dbconfig = config['dbconfig']
     wlan = wlconfig['wlan']
     wconfig = wlconfig['wconfig']
 
@@ -55,7 +57,7 @@ def go(knownaps, dbconfig, wlconfig, loops=25):
         # Try to store the connection information
         wdt.feed()
         print("Fed the dog")
-        sV = utils.postNetConfig(wlan, dbconfig)
+        sV = utils.postNetConfig(wlan, dbconfig, tagname=deviceid)
 
         # We only should attempt a measurement if the wifi is good, so
         #   keep this all in the conditional!
