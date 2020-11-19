@@ -35,12 +35,16 @@ def go(knownaps, dbconfig, wlconfig, loops=25):
     ds = ds18x20.DS18X20(ow)
 
     # Set up our last ditch hang preventer
-    wdt = WDT(timeout=20000)
+    dogfood = 20000
+    wdt = WDT(timeout=dogfood)
+    print("Watchdog set for %.2f seconds" % (dogfood/1000.))
+
     loopCounter = 0
     while loopCounter < loops:
         # Feed the dog. We'll do this a bunch since wifi can be slow
         wdt.feed()
-        print("\nStarting loop %d of %d" % (loopCounter+1, loops))
+        print("\nFed the dog")
+        print("Starting loop %d of %d" % (loopCounter+1, loops))
         print("Checking WiFi status ...")
         # Attempt to connect to one of the strongest of knownaps
         wlan, wconfig = uwifi.checkWifiStatus(knownaps,
@@ -50,6 +54,7 @@ def go(knownaps, dbconfig, wlconfig, loops=25):
 
         # Try to store the connection information
         wdt.feed()
+        print("Fed the dog")
         sV = utils.postNetConfig(wlan, dbconfig)
 
         # We only should attempt a measurement if the wifi is good, so
@@ -60,12 +65,13 @@ def go(knownaps, dbconfig, wlconfig, loops=25):
             #   sooner rather than later
             if sV is True:
                 wdt.feed()
+                print("Fed the dog")
                 doDS18x(ds, dbconfig, led=ledIndicator)
 
         gc.collect()
         # Print some memory statistics so I can watch for problems
         micropython.mem_info()
-        print("Sleeping ...\n")
+        print("Sleeping (and feeding the dog) ...\n")
         for sc in range(0, 60):
             if sc % 10 == 0 and sc != 0:
                 print("\n")
