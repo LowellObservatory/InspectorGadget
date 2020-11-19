@@ -37,7 +37,7 @@ def go(deviceid, config, wlconfig, loops=25):
     ds = ds18x20.DS18X20(ow)
 
     # Set up our last ditch hang preventer
-    dogfood = 20000
+    dogfood = 60000
     wdt = WDT(timeout=dogfood)
     print("Watchdog set for %.2f seconds" % (dogfood/1000.))
 
