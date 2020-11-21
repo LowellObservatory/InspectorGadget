@@ -40,32 +40,32 @@ def init():
         print("config.json file not found!")
         config = None
 
-    # Now try to pull out the bits in the config that SHOULD be in there
+    # Now check for the bits in the config that SHOULD be in there
     if config is not None:
-        try:
-            deviceid = config['deviceid']
-        except KeyError:
-            deviceid = "UndefinedCynomys"
+        # If the deviceid isn't defined, or is empty, set it
+        if "deviceid" not in config.keys():
+            config['deviceid'] = "UndefinedCynomys"
+        else:
+            if config['deviceid'] == "":
+                config['deviceid'] = "UndefinedCynomys"
 
-        try:
-            knownaps = config['knownaps']
-        except KeyError:
+        if "knownaps" not in config.keys():
             print("No wifi configuration found!")
-            knownaps = None
+            config['knownaps'] = None
 
-        try:
-            dbconfig = config['dbconfig']
-        except KeyError:
+        if "dbconfig" not in config.keys():
             print("No database configuration found!")
-            dbconfig = None
+            config['dbconfig'] = None
 
     # Attempt to connect to one of the strongest of knownaps
     #   If repl is True, start the webrepl too
-    wlan, wconfig = uwifi.checkWifiStatus(knownaps, repl=True)
-
-    # In case you want the MAC address, here it is
-    macaddr = ubinascii.hexlify(wlan.config('mac'), ':').decode()
-    print("Device MAC:", macaddr)
+    if config['knownaps'] is not None:
+        wlan, wconfig = uwifi.checkWifiStatus(config['knownaps'], repl=True)
+        # In case you want the MAC address, here it is
+        macaddr = ubinascii.hexlify(wlan.config('mac'), ':').decode()
+        print("Device MAC:", macaddr)
+    else:
+        wlan, wconfig = None, None
 
     # Ok, give even a little more time for things to settle before
     #   we move on to main.py
