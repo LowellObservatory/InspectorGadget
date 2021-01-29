@@ -1,9 +1,8 @@
 import gc
 import time
-import machine
 import binascii
 import micropython
-from machine import WDT
+from machine import WDT, Pin, reset
 
 import onewire
 import ds18x20
@@ -17,6 +16,11 @@ def go(deviceid, config, wlconfig, loops=25):
     Every single board deployment must have this function accepting these
     exact arguments.  Only way to ensure a non-maddening structure!
     """
+    # Set up our last ditch hang preventer
+    dogfood = 60000
+    wdt = WDT(timeout=dogfood)
+    print("Watchdog set for %.2f seconds" % (dogfood/1000.))
+
     # Unpack the things
     knownaps = config['knownaps']
     dbconfig = config['dbconfig']
@@ -32,14 +36,9 @@ def go(deviceid, config, wlconfig, loops=25):
         ledIndicator.on()
 
     # Set up the onewire stuff
-    dsPin = machine.Pin(21)
+    dsPin = Pin(21)
     ow = onewire.OneWire(dsPin)
     ds = ds18x20.DS18X20(ow)
-
-    # Set up our last ditch hang preventer
-    dogfood = 60000
-    wdt = WDT(timeout=dogfood)
-    print("Watchdog set for %.2f seconds" % (dogfood/1000.))
 
     loopCounter = 0
     while loopCounter < loops:
@@ -87,7 +86,7 @@ def go(deviceid, config, wlconfig, loops=25):
     # Since we're at the end of our rope here, drop the hammer and reset
     print("Resetting in 5 seconds ...")
     time.sleep(5)
-    machine.reset()
+    reset()
 
 
 def doDS18x(ds, dbconfig, led=None):

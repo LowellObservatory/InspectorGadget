@@ -1,7 +1,7 @@
 import gc
 import time
-import machine
 import micropython
+from machine import WDT, Pin, I2C, reset
 
 import bme280 as bme
 import utils as utils
@@ -13,6 +13,11 @@ def go(deviceid, config, wlconfig, loops=25):
     Every single board deployment must have this function accepting these
     exact arguments.  Only way to ensure a non-maddening structure!
     """
+    # Set up our last ditch hang preventer
+    dogfood = 60000
+    wdt = WDT(timeout=dogfood)
+    print("Watchdog set for %.2f seconds" % (dogfood/1000.))
+
     # Unpack the things
     knownaps = config['knownaps']
     dbconfig = config['dbconfig']
@@ -29,15 +34,17 @@ def go(deviceid, config, wlconfig, loops=25):
 
     # Set up the BME280 power (transistor) switch and the i2c bus
     bmeaddr = 0x77
-    bmePwr = machine.Pin(27, machine.Pin.OUT)
+    bmePwr = Pin(27, Pin.OUT)
     bmePwr.on()
     time.sleep(1)
     bmePwr.off()
-    i2c = machine.I2C(scl=machine.Pin(22), sda=machine.Pin(21), freq=100000)
+    i2c = I2C(scl=Pin(22), sda=Pin(21), freq=100000)
 
     loopCounter = 0
     while loopCounter < loops:
         print("")
+        wdt.feed()
+        print("\nFed the dog")
         print("Starting loop %d of %d" % (loopCounter+1, loops))
         print("Checking WiFi status ...")
         # Attempt to connect to one of the strongest of knownaps
@@ -48,6 +55,7 @@ def go(deviceid, config, wlconfig, loops=25):
 
         # Try to store the connection information
         sV = utils.postNetConfig(wlan, dbconfig, tagname=deviceid)
+        wdt.feed()
 
         # We only should attempt a measurement if the wifi is good, so
         #   keep this all in the conditional!
@@ -58,6 +66,7 @@ def go(deviceid, config, wlconfig, loops=25):
             if sV is True:
                 doBME(i2c, bmeaddr, bmePwr, dbconfig, tagname=deviceid)
 
+        wdt.feed()
         gc.collect()
         # Print some memory statistics so I can watch for problems
         micropython.mem_info()
@@ -74,7 +83,7 @@ def go(deviceid, config, wlconfig, loops=25):
     # Since we're at the end of our rope here, drop the hammer and reset
     print("Resetting in 5 seconds ...")
     time.sleep(5)
-    machine.reset()
+    reset()
 
 
 def doBME(i2c, bmeaddr, bmePwr, dbconfig, tagname='sensor'):
