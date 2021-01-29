@@ -77,6 +77,7 @@ def go(deviceid, config, wlconfig, loops=25):
             else:
                 print(".", end='')
             time.sleep(1)
+            wdt.feed()
 
         loopCounter += 1
 
