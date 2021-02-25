@@ -6,8 +6,8 @@ import ubinascii
 
 def scanWiFi(wlan):
     try:
-        # Needed because if you're connected, or trying to connect, 
-        #   you'll get this "STA is connecting, scan are not allowed!" 
+        # Needed because if you're connected, or trying to connect,
+        #   you'll get this "STA is connecting, scan are not allowed!"
         wlan.disconnect()
         nearbyaps = wlan.scan()
     except OSError as oe:
@@ -83,6 +83,15 @@ def connectWiFi(wlan, bestAP, password):
 
     # Make sure we don't have any lingering connection attemps going on
     wlan.disconnect()
+
+    # Bounce the interface
+    print("Disabling the WLAN interface")
+    wlan.active(False)
+    time.sleep(0.25)
+    wlan.active(True)
+    time.sleep(0.25)
+    print("WLAN reenabled")
+
     # The documentation sucks, but bssid should *not* be the string
     #   version of the desired MAC address
     wlan.connect(ssid, password, bssid=binmac)
