@@ -3,9 +3,13 @@ import urequests
 from machine import Pin
 
 
-def postNetConfig(wlan, dbconfig, tagname="cynomys", debug=True):
+def postNetConfig(wlan, dbconfig, deviceid="cynomys", debug=True):
     """
+    This is intended to post the info to a metric in a table called 'netinfo'
+    tagged with the DeviceID specified in the config.json file
     """
+    dbconfig.update({"dbtabl": "netinfo"})
+
     # Quick and early exit
     if wlan.isconnected() is False:
         sV = False
@@ -29,27 +33,27 @@ def postNetConfig(wlan, dbconfig, tagname="cynomys", debug=True):
     #   a little faster/easier.
     sV = False
     sV = postToInfluxDB(dbconfig, curIPs[0], keyname="ipaddress",
-                        tagN=tagname, tagV="network")
+                        tagN="DeviceID", tagV=deviceid)
     time.sleep(0.25)
 
     if sV is True:
         sV = postToInfluxDB(dbconfig, curIPs[2], keyname="gateway",
-                            tagN=tagname, tagV="network")
+                            tagN="DeviceID", tagV=deviceid)
         time.sleep(0.25)
 
     if sV is True:
         sV = postToInfluxDB(dbconfig, curIPs[3], keyname="dns",
-                            tagN=tagname, tagV="network")
+                            tagN="DeviceID", tagV=deviceid)
         time.sleep(0.25)
 
     if sV is True:
         sV = postToInfluxDB(dbconfig, curAP, keyname="accesspoint",
-                            tagN=tagname, tagV="network")
+                            tagN="DeviceID", tagV=deviceid)
         time.sleep(0.25)
 
     if sV is True:
         sV = postToInfluxDB(dbconfig, curRSSI, keyname="rssi",
-                            tagN=tagname, tagV="network")
+                            tagN="DeviceID", tagV=deviceid)
 
     return sV
 
