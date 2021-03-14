@@ -112,4 +112,5 @@ venv.bak/
 # References & binaries
 *.zip
 *.bin
+*.mpy
 MesaMon/cynomys/webrepl_cfg.py
