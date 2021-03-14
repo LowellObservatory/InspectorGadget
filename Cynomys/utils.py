@@ -134,7 +134,8 @@ class shinyThing(object):
         self.inverted = inverted
 
         # Should probably put this in a try...except block?
-        self.pin = initLED(self.pinnum)
+        self.pin = initLED(self.pinnum, inverted=self.inverted)
+        self.off()
 
         if startBlink is True:
             self.on()
@@ -171,12 +172,15 @@ def initButton(pinno):
     return butt
 
 
-def initLED(pinno):
+def initLED(pinno, inverted=False):
     """
     """
     # Regular (non-pwm, just on/off)
     print("Setting Pin %02d as OUTPUT" % (pinno))
-    led = Pin(pinno, Pin.OUT)
+    if inverted is False:
+        led = Pin(pinno, Pin.OUT)
+    else:
+        led = Pin(pinno, Pin.OUT, 1)
 
     return led
 
