@@ -14,6 +14,8 @@ def go(deviceid, config, wlconfig, loops=25):
     Every single board deployment must have this function accepting these
     exact arguments.  Only way to ensure a non-maddening structure!
     """
+    disableLEDs = True
+
     # Set up our last ditch hang preventer
     # wdt = WDT()
 
@@ -24,17 +26,18 @@ def go(deviceid, config, wlconfig, loops=25):
     wconfig = wlconfig['wconfig']
 
     # Set up our WiFi indicator
-    ledIndicator = utils.shinyThing(pin=2, inverted=True, startBlink=True)
-    if wlan.isconnected() is True:
-        ledIndicator.off()
-    else:
-        utils.blinken(ledIndicator, 0.25, 10)
-        ledIndicator.on()
+    ledIndicator = utils.shinyThing(pin=2, inverted=True, startBlink=False)
+    if disableLEDs is False:
+        if wlan.isconnected() is True:
+            ledIndicator.off()
+        else:
+            utils.blinken(ledIndicator, 0.25, 10)
+            ledIndicator.on()
 
     # Set up the SHT31D reset switch, the activity indicator, and the i2c bus
     shtaddr = 0x44
     shtrst = Pin(12, Pin.OUT)
-    shtIndicator = utils.shinyThing(pin=13, inverted=False, startBlink=True)
+    shtIndicator = utils.shinyThing(pin=13, inverted=False, startBlink=False)
     i2c = I2C(scl=Pin(5), sda=Pin(4), freq=100000)
 
     loopCounter = 0
@@ -62,7 +65,9 @@ def go(deviceid, config, wlconfig, loops=25):
             #   That lets us skip the rest so we can get a WiFi status check
             #   sooner rather than later
             if sV is True:
-                shtIndicator.on()
+                if disableLEDs is False:
+                    shtIndicator.on()
+                    
                 print("Turning sensor on ...")
                 shtrst.on()
                 doSHT(i2c, shtaddr, dbconfig, deviceid)
@@ -70,7 +75,8 @@ def go(deviceid, config, wlconfig, loops=25):
                 shtrst.off()
                 shtIndicator.off()
         else:
-            ledIndicator.on()
+            if disableLEDs is False:
+                ledIndicator.on()
 
         # wdt.feed()
         gc.collect()
