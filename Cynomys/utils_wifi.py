@@ -107,13 +107,13 @@ def connectWiFi(wlan, bestAP, password):
         conncheck = wlan.isconnected()
 
         # while loop escape hatch
-        if time.ticks_diff(now, connStart) >= 15000:
+        if time.ticks_diff(now, connStart) >= 10000:
             print("Connection timed out! Still might happen though...")
 
-        if time.ticks_diff(now, connStart) >= 25000:
+        if time.ticks_diff(now, connStart) >= 20000:
             print("Still waiting...")
 
-        if time.ticks_diff(now, connStart) >= 60000:
+        if time.ticks_diff(now, connStart) >= 40000:
             print("Ok I'm giving up on this connection attempt.")
             break
 
