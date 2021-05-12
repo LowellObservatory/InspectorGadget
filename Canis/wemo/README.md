@@ -24,4 +24,10 @@ subnet scan is skipped and things are generally much faster.
 ```python wemoDiscover.py```
 
 Takes no arguments, and it will scan the entire subnet for WeMo devices and
-return their IP addresses, active ports, MAC address, and WeMo name.
+return their IP addresses, active ports, MAC address, WeMo name, and current
+switch state (0 == Off, 1 == On).
+
+This code will only discover devices on your current subnet because that's 
+how WeMo plugs are discovered (via UPnP) and that won't ever change without
+a ton of work, so plan on being able to run this on a machine on the same 
+subnet as the plugs in question.
