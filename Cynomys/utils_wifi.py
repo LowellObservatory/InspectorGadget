@@ -96,21 +96,25 @@ def connectWiFi(wlan, bestAP, password):
     wlan.connect(ssid, password, bssid=binmac)
 
     # Give a healthy amount of time for the connection to finish
-    time.sleep(5)
+    time.sleep(10)
 
-    # Keep a count on how many times we've tried
-    tries = 0
+    # Keep a count on how long we've tried
+    connStart = time.ticks_ms()
 
+    print("Connecting...")
     while wlan.isconnected() is False:
-        print("Connecting...")
+        now = time.ticks_ms()
         conncheck = wlan.isconnected()
-        time.sleep(1)
 
-        tries += 1
         # while loop escape hatch
-        if tries > 10:
+        if time.ticks_diff(now, connStart) >= 10000:
             print("Connection timed out! Still might happen though...")
-            time.sleep(5)
+
+        if time.ticks_diff(now, connStart) >= 20000:
+            print("Still waiting...")
+
+        if time.ticks_diff(now, connStart) >= 40000:
+            print("Ok I'm giving up on this connection attempt.")
             break
 
     if wlan.isconnected() is True:
