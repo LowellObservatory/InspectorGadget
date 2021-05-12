@@ -3,6 +3,12 @@
 - Python > 3.6
 - [pywemo](https://github.com/pywemo/pywemo) >= 0.64
 
+# General Notes
+
+Default timeouts for connections are 10 seconds and not easily changed
+since they're hardcoded in pywemo, so there will be at least a 10 second
+wait if the name or IP is wrong in some cases.
+
 # wemoControl.py
 
 ```python wemoControl.py <WeMo name> <on, off, toggle>```
