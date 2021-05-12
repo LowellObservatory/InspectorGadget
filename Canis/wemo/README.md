@@ -1,3 +1,8 @@
+# Requirements
+
+- Python > 3.6
+- [pywemo](https://github.com/pywemo/pywemo) >= 0.64
+
 # wemoControl.py
 
 ```python wemoControl.py <WeMo name> <on, off, toggle>```
