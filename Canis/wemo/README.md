@@ -6,6 +6,8 @@ Takes an option argument, ```--direct```, that allows one to use an IP
 address instead of the WeMo name.  If this is specified the initial whole
 subnet scan is skipped and things are generally much faster.
 
+> :warning: ```--direct``` currently only works with IPs and not hostnames!
+
 # wemoDiscover.py
 
 ```python wemoDiscover.py```
