@@ -1,7 +1,7 @@
 # Requirements
 
 - Python > 3.6
-- [pywemo](https://github.com/pywemo/pywemo) >= 0.64
+- [pywemo](https://github.com/pywemo/pywemo) >= 0.6.4
 
 # General Notes
 
