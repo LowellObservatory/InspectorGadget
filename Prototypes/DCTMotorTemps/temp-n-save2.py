@@ -4,10 +4,10 @@ import time
 import matplotlib.pyplot as plt
 from influxdb import InfluxDBClient
 from influxdb import SeriesHelper
- 
+
 os.system('modprobe w1-gpio')
 os.system('modprobe w1-therm')
-  
+
 base_dir = '/sys/bus/w1/devices/'
 device_folder = glob.glob(base_dir + '28*')[0]
 device_file = device_folder + '/w1_slave'
@@ -27,10 +27,10 @@ ax2 = fig.add_subplot(212)
 ax2.set_ylim([0.0,50.0])
 line2, = ax2.plot(xval, sens2)
 
-host = 'astropci.lowell.edu'
+host = ''
 port = 8086
-user = 'dlytle'
-password = 'dlytle'
+user = ''
+password = ''
 dbname = 'temps'
 
 # Establish connection to influxdb database.
@@ -102,7 +102,7 @@ def read_temp():
 
 
 while True:
-    read_temp()        
+    read_temp()
     # Update plot.
     line1.set_ydata(sens1)
     line2.set_ydata(sens2)

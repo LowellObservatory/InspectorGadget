@@ -1,9 +1,9 @@
 import mysql.connector
 
 config = {
-       'user': 'dlytle',
-       'password': 'dlytle',
-       'host': 'astropci.lowell.edu',
+       'user': '',
+       'password': '',
+       'host': '',
        'database': 'temperature',
        'raise_on_warnings': True
          }

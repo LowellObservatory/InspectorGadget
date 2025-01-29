@@ -115,3 +115,5 @@ venv.bak/
 *.bin
 *.mpy
 MesaMon/cynomys/webrepl_cfg.py
+
+.DS_STORE

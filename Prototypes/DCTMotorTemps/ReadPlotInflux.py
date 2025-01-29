@@ -1,7 +1,7 @@
 from influxdb import InfluxDBClient
 import matplotlib.pyplot as plt
 
-client = InfluxDBClient('astropci', 8086, 'dlytle', 'dlytle', 'temps')
+client = InfluxDBClient('host', 8086, 'user', 'pass', 'temps')
 
 #result = client.query('select temp1,temp2 from \
 #   "events.stats.us.east-1" where time > (now() - 90m);')
