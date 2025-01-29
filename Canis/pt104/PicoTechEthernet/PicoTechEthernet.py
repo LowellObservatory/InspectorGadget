@@ -50,6 +50,7 @@ class PicoTechEthernet(object):
     def set(self, value, response=None):
         """Send text, if required check response."""
         self.socket.send(value)
+        response = False
         # self.socket.send(value.encode('ascii'))
 
         if response is not None:
@@ -58,16 +59,17 @@ class PicoTechEthernet(object):
             if isinstance(response, list):
                 for item in response:
                     if recv == item:
-                        return(True)
+                        response = True
             else:
                 if recv == response:
-                    return(True)
+                    response = True
                 else:
                     # print(recv)
-                    return(False)
+                    response = False
         else:
-            # Assume the best!
-            return(True)
+            # Assume the worst!
+            response = False
+        return response
 
     def filter(self, Hz=50):
         """Set the filters for 50 or 60 Hz mains."""
@@ -91,25 +93,33 @@ class PicoTechEthernet(object):
         """Read the EEPROM."""
         # NOTE: Not using self.set here because the response is
         # EEPROM=<128 bytes> and I didn't feel like adding a parse check.
-
+        # BUT because we're not using .set we have to check for a valid
+        #   response ourselves to make sure it's not telling us it's locked.
+        #   Checking the length is way easier and faster than anything else.
         self.socket.send('\x32'.encode('ascii'))  # Ask for EEPROM of device
-        eepromDataRaw = self.socket.recv(136)
-        # Snip out the initial response!
-        eepromData = eepromDataRaw[7:]
+        try:
+            eepromDataRaw = self.socket.recv(136)
+            if len(eepromDataRaw) != 136:
+                print("Invalid EEPROM response length! Device may be locked?")
+            else:
+                # Snip out the initial response!
+                eepromData = eepromDataRaw[7:]
 
-        # Parse EEPROM. Remember that the last index is not included!
-        # print(eepromData)
-        self.info["SerialNumber"] = eepromData[19:29].decode("UTF-8").rstrip('\x00')
-        self.info["CalibrationDate"] = eepromData[29:37].decode("UTF-8").rstrip('\x00')
-        self.info["MAC"] = binascii.hexlify(eepromData[53:59], sep=":").decode("UTF-8")
+                # Parse EEPROM. Remember that the last index is not included!
+                # print(eepromData)
+                self.info["SerialNumber"] = eepromData[19:29].decode("UTF-8").rstrip('\x00')
+                self.info["CalibrationDate"] = eepromData[29:37].decode("UTF-8").rstrip('\x00')
+                self.info["MAC"] = binascii.hexlify(eepromData[53:59], sep=":").decode("UTF-8")
 
-        chan0Cal = self.parseCal(eepromData[37:41])
-        chan1Cal = self.parseCal(eepromData[41:45])
-        chan2Cal = self.parseCal(eepromData[45:49])
-        chan3Cal = self.parseCal(eepromData[49:53])
+                chan0Cal = self.parseCal(eepromData[37:41])
+                chan1Cal = self.parseCal(eepromData[41:45])
+                chan2Cal = self.parseCal(eepromData[45:49])
+                chan3Cal = self.parseCal(eepromData[49:53])
 
-        cals = {0: chan0Cal, 1: chan1Cal, 2: chan2Cal, 3: chan3Cal}
-        self.info["calibration"] = cals
+                cals = {0: chan0Cal, 1: chan1Cal, 2: chan2Cal, 3: chan3Cal}
+                self.info["calibration"] = cals
+        except Exception as err:
+            print(str(err))
 
     def read(self):
         """Read value from device."""

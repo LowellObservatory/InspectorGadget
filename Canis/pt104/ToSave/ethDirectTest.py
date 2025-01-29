@@ -1,15 +1,19 @@
 """."""
 
 import socket
+import asyncio as aio
 
 from numpy.polynomial.polynomial import Polynomial
 
+from ligmos.utils.database import influxobj
+from ligmos.utils.common import HowtoStopNicely
 from ligmos.utils.packetizer import makeInfluxPacket
+
 from PicoTechEthernet.PicoTechEthernet import PicoTechEthernetPT104
 
 
-def pt104Runner(pt104, chans, gains, nWires,
-                interval=60., database=None):
+async def pt104Runner(pt104, chans, gains, nWires,
+                      interval=60., database=None):
     # If this is true, any values that end up at -9999. are not posted
     ignoreInvalids = True
 
@@ -19,12 +23,9 @@ def pt104Runner(pt104, chans, gains, nWires,
         good = pt104.lock()
         print("PT-104 lock status:", good)
 
-        if good is True:
-            # Parse the EEPROM data and store it for later use internally
-            pt104.EEPROM()
-            pt104.unlock()
-        else:
-            print("Warning: PT-104 lock failed!")
+        # Parse the EEPROM data and store it for later use internally
+        pt104.EEPROM()
+        pt104.unlock()
     except socket.timeout:
         print('Connection timeout to PicoTech device')
 
@@ -35,18 +36,12 @@ def pt104Runner(pt104, chans, gains, nWires,
         thisTempUpdate = {}
 
         if pt104.alive() is False:
-            print("Device disconnected; reconnecting...")
-            good = pt104.connect()
-            if good is True:
-                if pt104.info['calibration'] is None:
-                    # Parse the EEPROM data and store it for later use
-                    pt104.EEPROM()
-                    good = pt104.filter(Hz=60)
-            else:
-                print("Warning: PT-104 lock failed! Again!")
+            print("Was dead! Reconnecting")
+            pt104.connect()
+        good = pt104.filter(Hz=60)
+        good = pt104.lock()
 
-        if good is True:
-            good = pt104.lock()
+        while good is True:
             i = 0
             for i, chan in enumerate(chans):
                 if chan is True:
@@ -92,6 +87,19 @@ def pt104Runner(pt104, chans, gains, nWires,
             if database is not None:
                 #database.write(pkt)
                 pass
+
+            # Wait in small increments so we can send alive() requests
+            #   and not have to completely restart the connection
+            j = 0
+            for _ in range(int(interval)*2):
+                await aio.sleep(0.5)
+                j += 1
+                if j % 10 == 0:
+                    good = pt104.alive()
+                    if good is False:
+                        print("Device disconnected!")
+                        break
+
     except socket.timeout:
         pass
         # print('Connection timeout to PicoTech device')
@@ -121,11 +129,35 @@ def pt100conv(resistance):
     return thisTemp
 
 
-pt104_bunsen = PicoTechEthernetPT104(ip='10.0.0.42', port=6642)
-gains = [1, 1, 1, 1]
+async def loop_stopper():
+    while runner.halt is False:
+        await aio.sleep(1.)
+        if runner.halt is True:
+            loop.stop()
 
-chans = [True, False, True, True]
-nWires = [4, 4, 4, 4]
 
-pt104Runner(pt104_bunsen, chans, gains, nWires,
-            interval=25., database=None)
+if __name__ == "__main__":
+    pt104_bunsen = PicoTechEthernetPT104(ip='10.0.0.42', port=6642)
+    pt104_beaker = PicoTechEthernetPT104(ip='10.0.0.43', port=6642)
+
+    idb = influxobj(host='tanagra.lowell.edu', port=8086,
+                    tablename='ldtDevTests',
+                    user='darmok', pw='jalad')
+
+    # gain 0 == 1x (0-10k ohm range; PT-1000)
+    # gain 1 == 21x (0-375 ohm range; PT-100)
+    gains = [1, 1, 1, 1]
+
+    chans = [True, False, True, True]
+    nWires = [4, 4, 4, 4]
+
+    runner = HowtoStopNicely()
+    loop = aio.new_event_loop()
+    loop.create_task(pt104Runner(pt104_bunsen, chans, gains, nWires,
+                                 interval=25., database=idb))
+    loop.create_task(pt104Runner(pt104_beaker, chans, gains, nWires,
+                                 interval=25., database=idb))
+    loop.create_task(loop_stopper())
+    loop.run_forever()
+
+    print("Done!")
