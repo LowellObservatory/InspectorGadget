@@ -36,21 +36,31 @@ class PicoTechEthernet(object):
         """Establish control of device."""
         responseList = [b'Lock Success\x00',
                         b'Lock Success (already locked to this machine)\x00']
-        return(self.set(b'lock', response=responseList))
+        # NOTE: Keeping this seperate and not stuffed into the return() makes
+        #   using the debugging easier, so preferably keep it this way
+        resp = self.set(b'lock', response=responseList)
+        return(resp)
+
+    def disconnect(self):
+        """ Emergency hammer """
+        # self.socket.shutdown(socket.SHUT_RDWR)
+        self.socket.close()
 
     def unlock(self):
         """Establish control of device."""
-        return(self.set(b'\x34', response=b'Unlocked\x00'))
+        resp = self.set(b'\x33', response=b'Unlocked\x00')
+        return(resp)
 
     def alive(self):
         """Send the keepalive command."""
-        return(self.set(b'\x34', response=b'Alive\x00'))
+        resp = self.set(b'\x34', response=b'Alive\x00')
+        return(resp)
         # return(self.set(b'\x34', response=None))
 
     def set(self, value, response=None):
         """Send text, if required check response."""
         self.socket.send(value)
-        response = False
+        responseGood = False
         # self.socket.send(value.encode('ascii'))
 
         if response is not None:
@@ -59,17 +69,18 @@ class PicoTechEthernet(object):
             if isinstance(response, list):
                 for item in response:
                     if recv == item:
-                        response = True
+                        responseGood = True
+                        break
             else:
                 if recv == response:
-                    response = True
+                    responseGood = True
                 else:
                     # print(recv)
-                    response = False
+                    responseGood = False
         else:
             # Assume the worst!
-            response = False
-        return response
+            responseGood = False
+        return responseGood
 
     def filter(self, Hz=50):
         """Set the filters for 50 or 60 Hz mains."""
@@ -77,8 +88,9 @@ class PicoTechEthernet(object):
         if Hz == 50:
             good = self.set(b'\x30\x00', response=b"Mains Changed\x00")
         else:
-            # NOTE: This is an 'else' because there is no other choice
-            good = self.set(b'\x30\x01', response=b"Mains Changed\x00")
+            # NOTE: This is an 'else' because the device only supports 50/60
+            #   Any non-zero byte denotes 60 hz mains, so I chose 42
+            good = self.set(b'\x30\x42', response=b"Mains Changed\x00")
         return good
 
     def parseCal(self, calData):
@@ -99,7 +111,8 @@ class PicoTechEthernet(object):
         self.socket.send('\x32'.encode('ascii'))  # Ask for EEPROM of device
         try:
             eepromDataRaw = self.socket.recv(136)
-            if len(eepromDataRaw) != 136:
+            # NOTE: -1 because there's an end bit that gets stripped?
+            if len(eepromDataRaw) != 136-1:
                 print("Invalid EEPROM response length! Device may be locked?")
             else:
                 # Snip out the initial response!
@@ -155,11 +168,13 @@ class PicoTechEthernetPT104(PicoTechEthernet):
 
         self.ip = ip
         self.port = port
+        self.metadata = None
 
     def singleRead(self, chanNum, chanGain, nWires, unlock=True):
         chanMask = [False, False, False, False]
         gainMask = [0, 0, 0, 0]
         wireMask = [4, 4, 4, 4]
+
         chanMask[chanNum] = True
         gainMask[chanNum] = chanGain
         wireMask[chanNum] = nWires
