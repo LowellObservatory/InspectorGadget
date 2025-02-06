@@ -63,34 +63,35 @@ async def pt104Runner(pt104, chans, gains, nWires,
                         # This just works around weird values for enabled
                         #   but disconnected channels
                         post = False
-                        if val == -0.0 or val == 0.0 or \
-                            val < 0. or val > 20000:
-                            val = -9999.9
-                            temp = -9999.9
-                            if ignoreInvalids is True:
-                                post = False
-                            else:
-                                post = True
-                        else:
-                            val = round(val, 5)
-                            temp = round(pt100conv(val), 5)
-                            if temp < -280.:
+                        if val is not None:
+                            if val == -0.0 or val == 0.0 or \
+                                val < 0. or val > 20000:
                                 val = -9999.9
                                 temp = -9999.9
                                 if ignoreInvalids is True:
                                     post = False
                                 else:
-                                    post=True
+                                    post = True
                             else:
-                                post = True
+                                val = round(val, 5)
+                                temp = round(pt100conv(val), 5)
+                                if temp < -280.:
+                                    val = -9999.9
+                                    temp = -9999.9
+                                    if ignoreInvalids is True:
+                                        post = False
+                                    else:
+                                        post=True
+                                else:
+                                    post = True
 
-                        if post is True:
-                            ohmLab = "Channel_%d_ohms" % (thisChan)
-                            tmpLab = "Channel_%d_tempC" % (thisChan)
-                            thisTempUpdate.update({ohmLab: val,
-                                                   tmpLab: temp})
-                        chanLabel = "Channel_%d" % (thisChan+1)
-                        print("%s: %d %f" % (chanLabel, cal, val))
+                            if post is True:
+                                ohmLab = "Channel_%d_ohms" % (thisChan)
+                                tmpLab = "Channel_%d_tempC" % (thisChan)
+                                thisTempUpdate.update({ohmLab: val,
+                                                    tmpLab: temp})
+                            chanLabel = "Channel_%d" % (thisChan+1)
+                            print("%s: %d %f" % (chanLabel, cal, val))
 
                 pkt = makeInfluxPacket(meas=['glycolTemps'],
                                        tags=pt104.metadata,
