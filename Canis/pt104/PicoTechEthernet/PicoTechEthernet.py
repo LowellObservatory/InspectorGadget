@@ -112,6 +112,7 @@ class PicoTechEthernet(object):
         try:
             eepromDataRaw = self.socket.recv(136)
             # NOTE: -1 because there's an end bit that gets stripped?
+            print("EEPROM data length: %d" % (len(eepromDataRaw)))
             if len(eepromDataRaw) != 136-1:
                 print("Invalid EEPROM response length! Device may be locked?")
             else:
