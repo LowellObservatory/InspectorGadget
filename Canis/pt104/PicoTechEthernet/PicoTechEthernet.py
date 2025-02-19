@@ -249,8 +249,7 @@ class PicoTechEthernetPT104(PicoTechEthernet):
             chanCal = self.info['calibration'][thisChannel]
 
             if self.superDebug is True:
-                print(measurement)
-                print(thisNWires)
+                print("NWires: %d" % (thisNWires))
                 print(zero, one, two, three)
                 print(chanCal)
 
