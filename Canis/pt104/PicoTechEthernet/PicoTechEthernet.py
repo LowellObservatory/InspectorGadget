@@ -158,13 +158,15 @@ class PicoTechEthernet(object):
 class PicoTechEthernetPT104(PicoTechEthernet):
     """."""
 
-    def __init__(self, ip='127.0.0.1', port=6554):
+    def __init__(self, ip='127.0.0.1', port=6554, superDebug=False):
         """."""
         super().__init__()
         self.model = b'PT-104'
         self.channeloffset = {'00': 0, '04': 1, '08': 2, '0c': 3}
         self.nWires = [4, 4, 4, 4]
         self.conversionTime = 0.720
+
+        self.superDebug = superDebug
 
         self.ip = ip
         self.port = port
@@ -244,6 +246,13 @@ class PicoTechEthernetPT104(PicoTechEthernet):
             thisChannel = self.channeloffset[channel]
             thisNWires = self.nWires[thisChannel]
             chanCal = self.info['calibration'][thisChannel]
+
+            if self.superDebug is True:
+                print(measurement)
+                print(thisNWires)
+                print(zero, one, two, three)
+                print(chanCal)
+
             if thisNWires == 4:
                 measurement='resistance_4wire'
             elif thisNWires == 3:

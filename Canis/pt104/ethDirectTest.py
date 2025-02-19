@@ -54,7 +54,7 @@ async def pt104Runner(pt104, chans, gains, nWires,
                 i = 0
                 for i, chan in enumerate(chans):
                     if chan is True:
-                        print("Reading channel %02d" % (chan))
+                        print("Reading channel %02d" % (i))
                         thisChan, cal, val = pt104.singleRead(i,
                                                               gains[i],
                                                               nWires[i],
@@ -241,7 +241,8 @@ if __name__ == "__main__":
             thisSect.nwires = [int(x) for x in thisSect.nwires]
 
             po = PicoTechEthernetPT104(ip=thisSect.devhost,
-                                       port=thisSect.devport)
+                                       port=thisSect.devport,
+                                       superDebug=True)
             po = pt104_getInfo(po)
 
             # NOTE FOR FUTURE: Is deepcopy() required, or will the refs
