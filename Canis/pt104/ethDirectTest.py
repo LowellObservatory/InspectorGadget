@@ -124,13 +124,21 @@ async def pt104Runner(pt104, chans, gains, nWires,
             j += 1
             if j*0.5 >= aliveInterval:
                 print("PT-104 aliveness ping during query interval...")
-                isAlive = pt104.alive()
-                if isAlive is False:
-                    print("Device not alive!")
+                try:
+                    isAlive = pt104.alive()
+                    if isAlive is False:
+                        print("Device not alive!")
+                        pt104.unlock()
+                        good = pt104.connect()
+                        if good is True:
+                            pt104.lock()
+                except TimeoutError:
+                    print("Timed out while waiting for alive reply!")
                     pt104.unlock()
                     good = pt104.connect()
                     if good is True:
-                        pt104.lock()
+                            pt104.lock()
+
                 j = 0
 
 
