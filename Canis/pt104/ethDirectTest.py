@@ -137,7 +137,7 @@ async def pt104Runner(pt104, chans, gains, nWires,
                     pt104.unlock()
                     good = pt104.connect()
                     if good is True:
-                            pt104.lock()
+                        pt104.lock()
 
                 j = 0
 
